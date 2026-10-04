@@ -81,3 +81,9 @@
 ## v0.2.2 — TA compatibility corrections
 
 - Corrected Cisco ASA connection IDs, Cisco IOS auth/config events, AWS CloudTrail service schemas, Defender Event Hub layout, FortiGate sourcetype, Ivanti update telemetry, Junos sourcetypes, Linux audit coverage, PAN-OS traffic shape, Windows source metadata, and Tenable schema.
+### Finding field requirement update
+
+- Added `risk_score` to every synthetic finding/notable, set equal to the direct finding score.
+- Retained required `entity` and `entity_type` on every finding.
+- This remains a non-RBA, one-source-event-per-notable model; no `risk_object`, `risk_event_count`, or intermediate findings are emitted.
+

@@ -485,6 +485,10 @@ def notable_raw(
         ("entity", entity),
         ("entity_type", entity_type),
         ("finding_score", finding_score),
+        # ES finding actions expect risk_score as the numeric finding score input.
+        # This does not make the record RBA: there is still exactly one backing
+        # source event and no risk_object/risk_event_count/intermediate findings.
+        ("risk_score", finding_score),
         # A non-RBA notable is one correlation-search result, not an aggregation
         # of intermediate findings. Keep this count at exactly one.
         ("source_count", 1),
@@ -509,7 +513,7 @@ def notable_raw(
         ("user", user),
         ("drilldown_name", "View source event"),
         ("drilldown_search", drilldown_search),
-        ("nes_fields", "src,dest,user,entity,entity_type,finding_score"),
+        ("nes_fields", "src,dest,user,entity,entity_type,finding_score,risk_score"),
     ]
     annotation_obj = json.loads(annotations)
     if annotation_obj.get("mitre_attack"):
@@ -624,6 +628,7 @@ def build_notables(root: Path, scenario: str, dataset_dir: Path, cfg: dict) -> d
             "entity": entity,
             "entity_type": entity_type,
             "finding_score": finding_score,
+            "risk_score": finding_score,
             "severity": urgency,
             "security_domain": domain,
             "source_count": 1,
@@ -692,6 +697,7 @@ def build_notables(root: Path, scenario: str, dataset_dir: Path, cfg: dict) -> d
             "entity": entity,
             "entity_type": entity_type,
             "finding_score": finding_score,
+            "risk_score": finding_score,
             "severity": urgency,
             "security_domain": domain,
             "source_count": 1,
@@ -732,12 +738,12 @@ def build_notables(root: Path, scenario: str, dataset_dir: Path, cfg: dict) -> d
         "canonical_ingest_file": "hec/events.jsonl",
         "participant_filter": f"index=notable host=SILK-SPECTER-ES sourcetype=stash scenario={scenario}",
         "required_finding_fields": [
-            "rule_name", "rule_description", "entity", "entity_type", "finding_score",
+            "rule_name", "rule_description", "entity", "entity_type", "finding_score", "risk_score",
             "severity", "urgency", "status_label", "security_domain", "source_event_id", "drilldown_search",
         ],
         "forbidden_rba_fields": [
             "all_risk_objects", "normalized_risk_object", "risk_object", "risk_object_type",
-            "risk_score", "risk_event_count",
+            "risk_event_count",
         ],
     }
     (out / "manifest.json").write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
@@ -754,7 +760,7 @@ def build_notables(root: Path, scenario: str, dataset_dir: Path, cfg: dict) -> d
     with instructor_path.open("w", newline="", encoding="utf-8") as f:
         fields = [
             "event_id", "scenario", "time", "rule_name", "expected_disposition", "activity_id", "kind",
-            "entity", "entity_type", "finding_score", "severity", "security_domain", "source_count",
+            "entity", "entity_type", "finding_score", "risk_score", "severity", "security_domain", "source_count",
             "source_event_id", "source_host", "source", "source_sourcetype", "notes",
         ]
         w = csv.DictWriter(f, fieldnames=fields)

@@ -65,6 +65,7 @@
       "entity",
       "entity_type",
       "finding_score",
+      "risk_score",
       "severity",
       "urgency",
       "status_label",
@@ -77,7 +78,6 @@
       "normalized_risk_object",
       "risk_object",
       "risk_object_type",
-      "risk_score",
       "risk_event_count"
     ]
   },

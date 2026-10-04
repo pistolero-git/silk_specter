@@ -24,6 +24,7 @@ REQUIRED = {
     "entity",
     "entity_type",
     "finding_score",
+    "risk_score",
     "severity",
     "urgency",
     "status",
@@ -57,7 +58,6 @@ FORBIDDEN_RBA = {
     "normalized_risk_object",
     "risk_object",
     "risk_object_type",
-    "risk_score",
     "risk_event_count",
     "risk_object_system",
     "contributing_events_search",
@@ -96,8 +96,10 @@ class NotableSchemaTests(unittest.TestCase):
                 self.assertEqual(fields["ctf_track"], track, track)
                 self.assertEqual(fields["source_count"], "1", track)
                 self.assertNotIn(fields["entity"], {"", "-", "unknown"}, track)
+                self.assertTrue(fields["entity"] and fields["entity"] != "-", track)
                 self.assertIn(fields["entity_type"], {"system", "user", "network_artifacts", "other"}, track)
                 self.assertGreaterEqual(int(fields["finding_score"]), 0, track)
+                self.assertEqual(fields["risk_score"], fields["finding_score"], track)
                 self.assertEqual(fields["orig_tag"], "modaction_result", track)
                 self.assertEqual(fields["version"], "2.1", track)
                 self.assertIn("index=<index>", fields["drilldown_search"], track)
@@ -157,7 +159,7 @@ class NotableSchemaTests(unittest.TestCase):
             self.assertEqual(manifest["notable_model"], "non-rba-direct-event", track)
             self.assertEqual(manifest["source_events_per_notable"], 1, track)
             self.assertEqual(set(manifest["forbidden_rba_fields"]), {
-                "all_risk_objects", "normalized_risk_object", "risk_object", "risk_object_type", "risk_score", "risk_event_count"
+                "all_risk_objects", "normalized_risk_object", "risk_object", "risk_object_type", "risk_event_count"
             })
 
 
