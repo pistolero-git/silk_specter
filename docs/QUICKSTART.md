@@ -242,7 +242,13 @@ If the requested index already exists but is empty, the loader can reuse it. If 
 
 The main loader does **not** load the notable feed. Load it separately after the main track is present.
 
-Splunk Enterprise Security normally already provides `index=notable`.
+The notable loader is container-native, like the main loader. It checks indexes with
+`btool`, installs a temporary `batch://` input through Splunk configuration, restarts
+Splunk, then copies the notable stream into the live container. It does not depend on
+interactive Splunk CLI authentication or host-published Splunk ports.
+
+Splunk Enterprise Security normally already provides `index=notable`. If `index=notable`
+is searchable in Splunk Web, the loader should detect it through `btool` and use it.
 
 Easy:
 
