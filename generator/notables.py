@@ -414,7 +414,7 @@ def build_notables(root: Path, scenario: str, dataset_dir: Path, cfg: dict) -> d
         records.append({
             "time": dt.timestamp(),
             "host": "SILK-SPECTER-ES",
-            "source": "notable",
+            "source": f"SS - {rule} - Rule",
             "sourcetype": "stash",
             "event": notable_raw(
                 event_id=event_id,
@@ -475,7 +475,7 @@ def build_notables(root: Path, scenario: str, dataset_dir: Path, cfg: dict) -> d
         records.append({
             "time": dt.timestamp(),
             "host": "SILK-SPECTER-ES",
-            "source": "notable",
+            "source": f"SS - {title} - Rule",
             "sourcetype": "stash",
             "event": notable_raw(
                 event_id=event_id,
@@ -537,10 +537,10 @@ def build_notables(root: Path, scenario: str, dataset_dir: Path, cfg: dict) -> d
         "campaign_notables": len(findings),
         "noise_notables": noise_count,
         "sourcetype": "stash",
-        "source": "notable",
+        "source": "per-event search_name",
         "stash_schema": "es8-native-kv-v2",
         "canonical_ingest_file": "hec/events.jsonl",
-        "participant_filter": f"index=notable source=notable sourcetype=stash scenario={scenario}",
+        "participant_filter": f"index=notable host=SILK-SPECTER-ES sourcetype=stash scenario={scenario}",
         "required_finding_fields": [
             "rule_name", "rule_description", "entity", "entity_type", "risk_score",
             "severity", "urgency", "status_label", "security_domain", "drilldown_search",
@@ -554,7 +554,7 @@ def build_notables(root: Path, scenario: str, dataset_dir: Path, cfg: dict) -> d
     with (out / "ingest_manifest.csv").open("w", newline="", encoding="utf-8") as f:
         w = csv.DictWriter(f, fieldnames=["file", "host", "source", "sourcetype", "event_count"])
         w.writeheader()
-        w.writerow({"file": "raw/notables.log", "host": "SILK-SPECTER-ES", "source": "notable", "sourcetype": "stash", "event_count": len(records)})
+        w.writerow({"file": "raw/notables.log", "host": "SILK-SPECTER-ES", "source": "per-event search_name", "sourcetype": "stash", "event_count": len(records)})
 
     instructor_path = root / "instructor" / "findings" / f"{scenario}_notable_ground_truth.csv"
     with instructor_path.open("w", newline="", encoding="utf-8") as f:

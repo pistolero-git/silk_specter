@@ -73,9 +73,9 @@ class NotableSchemaTests(unittest.TestCase):
             rows = [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines() if line.strip()]
             self.assertTrue(rows, track)
             for row in rows:
-                self.assertEqual(row["source"], "notable", track)
                 self.assertEqual(row["sourcetype"], "stash", track)
                 epoch, fields = parse_stash(row["event"])
+                self.assertEqual(row["source"], fields["search_name"], track)
                 self.assertEqual(epoch, int(float(row["time"])), track)
                 self.assertTrue(REQUIRED.issubset(fields), (track, sorted(REQUIRED - set(fields))))
                 self.assertEqual(fields["_time"], str(epoch), track)

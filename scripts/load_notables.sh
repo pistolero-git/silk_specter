@@ -45,8 +45,10 @@ APP_NAME="SA-silk-specter-notables-${SCENARIO}-${SAFE_SOURCE}-${SAFE_NOTABLE}"
 APP_DST="/opt/splunk/etc/apps/$APP_NAME"
 
 REMOTE="/opt/splunk/var/spool/silk-specter-notables-${SCENARIO}-${SAFE_SOURCE}"
-HEC_REMOTE="$REMOTE/events.jsonl"
-HEC_UPLOAD="$REMOTE/events.jsonl.upload"
+RUN_ID="$(date -u +%Y%m%dT%H%M%SZ)-$$-${RANDOM}"
+HEC_GLOB="$REMOTE/*.jsonl"
+HEC_REMOTE="$REMOTE/events-${RUN_ID}.jsonl"
+HEC_UPLOAD="$HEC_REMOTE.upload"
 
 TMP="$(mktemp -d)"
 trap 'rm -rf "$TMP"' EXIT
@@ -168,12 +170,13 @@ else
 fi
 
 cat >"$TMP/app/local/inputs.conf" <<EOF
-[batch://$HEC_REMOTE]
+[batch://$HEC_GLOB]
 disabled = 0
 index = $NOTABLE_INDEX
 sourcetype = asteron:hec
 host = SILK-SPECTER-ES
 move_policy = sinkhole
+crcSalt = <SOURCE>
 EOF
 
 if (( CREATE_INDEX == 1 )); then
@@ -186,7 +189,7 @@ EOF
 fi
 
 echo "[2/7] Installing container-local notable loader app"
-podman exec --user 0 "$CONTAINER" rm -rf "$APP_DST" "$REMOTE"
+podman exec --user 0 "$CONTAINER" rm -rf "$APP_DST"
 podman exec --user 0 "$CONTAINER" mkdir -p "$APP_DST" "$REMOTE"
 podman cp "$TMP/app/." "$CONTAINER:$APP_DST"
 podman exec --user 0 "$CONTAINER" chown -R splunk:splunk "$APP_DST" "$REMOTE"
@@ -226,12 +229,13 @@ INPUT_CFG="$(
   bounded podman exec --user splunk "$CONTAINER" \
     /opt/splunk/bin/splunk btool inputs list --debug 2>/dev/null || true
 )"
-if ! grep -Fq "[batch://$HEC_REMOTE]" <<<"$INPUT_CFG"; then
+if ! grep -Fq "[batch://$HEC_GLOB]" <<<"$INPUT_CFG"; then
   echo "ERROR: notable batch input is not active after restart." >&2
   exit 8
 fi
 
-echo "[6/7] Copying $EXPECTED notables into the live container"
+echo "[6/7] Copying $EXPECTED notables into a unique live batch source: $(basename "$HEC_REMOTE")"
+echo "      Unique source path + crcSalt=<SOURCE> prevents fishbucket from suppressing a corrected reload."
 podman exec --user 0 "$CONTAINER" mkdir -p "$REMOTE"
 podman exec --user 0 "$CONTAINER" rm -f "$HEC_UPLOAD" "$HEC_REMOTE"
 podman cp "$PREPARED" "$CONTAINER:$HEC_UPLOAD"
@@ -256,5 +260,5 @@ echo "Submitted $EXPECTED synthetic notables for track=$SCENARIO to index=$NOTAB
 echo "Container-native load completed without interactive CLI authentication or host-published Splunk ports."
 echo
 echo "Validate in Splunk Web with:"
-echo "  index=$NOTABLE_INDEX source=notable sourcetype=stash scenario=$SCENARIO"
+echo "  index=$NOTABLE_INDEX host=SILK-SPECTER-ES sourcetype=stash scenario=$SCENARIO"
 echo "  | stats count by rule_name urgency"

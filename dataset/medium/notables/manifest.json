@@ -4,10 +4,10 @@
   "campaign_notables": 8,
   "noise_notables": 60,
   "sourcetype": "stash",
-  "source": "notable",
+  "source": "per-event search_name",
   "stash_schema": "es8-native-kv-v2",
   "canonical_ingest_file": "hec/events.jsonl",
-  "participant_filter": "index=notable source=notable sourcetype=stash scenario=medium",
+  "participant_filter": "index=notable host=SILK-SPECTER-ES sourcetype=stash scenario=medium",
   "required_finding_fields": [
     "rule_name",
     "rule_description",

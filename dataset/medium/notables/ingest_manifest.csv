@@ -1,2 +1,2 @@
 file,host,source,sourcetype,event_count
-raw/notables.log,SILK-SPECTER-ES,notable,stash,68
+raw/notables.log,SILK-SPECTER-ES,per-event search_name,stash,68
