@@ -30,22 +30,64 @@ Current status:
 
 Medium and Hard still require `ALLOW_AUTHORING=1` when loading until target-Splunk validation is complete.
 
+
+### Complete track commands
+
+Keep these track-specific commands together so the Quick Start shows how to add **all three** datasets to Splunk.
+
+Easy:
+
+```bash
+make generate-easy
+./scripts/load_to_splunk.sh easy asteron_easy_v001
+./scripts/load_notables.sh easy asteron_easy_v001 notable
+```
+
+Medium:
+
+```bash
+make generate-medium
+
+ALLOW_AUTHORING=1 \
+./scripts/load_to_splunk.sh medium asteron_medium_v001
+
+./scripts/load_notables.sh medium asteron_medium_v001 notable
+```
+
+Hard:
+
+```bash
+make generate-hard
+
+ALLOW_AUTHORING=1 \
+./scripts/load_to_splunk.sh hard asteron_hard_v001
+
+./scripts/load_notables.sh hard asteron_hard_v001 notable
+```
+
+The three main datasets are separate and should use separate indexes:
+
+```text
+easy   -> asteron_easy_v001
+medium -> asteron_medium_v001
+hard   -> asteron_hard_v001
+```
+
+The notable feeds can all go to the ES `notable` index because each event retains its track/scenario metadata.
+
 ## 2. Generate the dataset and synthetic noise
 
 Generation rebuilds `dataset/<track>/` from scratch. It does **not** append new noise to the previous generated dataset.
 
-Generate the default corpus for a track:
+Generate the default corpus for the track you are working with:
 
 ```bash
 make generate-easy
-```
-
-or:
-
-```bash
 make generate-medium
 make generate-hard
 ```
+
+Run only the target(s) you intend to regenerate. Each track writes to its own `dataset/<track>/` directory.
 
 Each generation run includes:
 
