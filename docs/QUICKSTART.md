@@ -6,7 +6,7 @@ SILK SPECTER has three different data layers:
 
 1. **Static campaign evidence** — fixed answer-bearing APT activity from `scenario_data/<track>/attack_events.jsonl`.
 2. **Synthetic background/noise telemetry** — generated normal Asteron activity around the fixed campaign.
-3. **Synthetic notable noise** — generated benign/questionable ES-style findings mixed with the authored campaign findings.
+3. **Synthetic notable feed** — direct non-RBA ES notables. Campaign notables are backed by one authored APT event; benign/questionable noise notables are backed by one generated background event.
 
 Regenerating noise does **not** change the static answer-bearing campaign evidence or the canonical question answers.
 
@@ -96,8 +96,8 @@ fixed static campaign evidence
 + synthetic basic/background telemetry
 + synthetic enterprise background telemetry
 + other generated background such as Defender activity
-+ synthetic campaign notables
-+ synthetic benign/questionable notable noise
++ direct non-RBA campaign notables backed by authored APT events
++ direct benign/questionable notable noise backed by generated background events
 ```
 
 The default raw-telemetry noise controls are:
@@ -140,9 +140,11 @@ make generate-hard \
 
 These settings change only the generated background telemetry. They do not change the fixed attack facts used by the questions.
 
-### Synthetic notable noise
+### Synthetic notable feed
 
 The notable feed is generated automatically by the same `make generate-<track>` command. You do not need a second generation command.
+
+These are **non-RBA** notables. Each notable represents one direct correlation-search result and is linked to exactly one event already present in the generated participant dataset. The generator does not create intermediate findings or aggregate risk events into a notable. Campaign notables use authored APT events; notable noise uses real generated background events. Fields such as `risk_score`, `risk_object`, and `risk_event_count` are intentionally absent. `source_count` is always `1`.
 
 Generated notable files are written under:
 
@@ -268,7 +270,7 @@ Hard:
 ./scripts/load_notables.sh hard asteron_hard_v001 notable
 ```
 
-The notable loader replaces the `<index>` placeholder in each drilldown with the track index you supply.
+The notable loader replaces the `<index>` placeholder in each drilldown with the track index you supply. Each drilldown points back to the single source event that produced the synthetic notable.
 
 If the lab does not have Splunk ES and therefore does not have `index=notable`, create/use a lab-only notable index:
 

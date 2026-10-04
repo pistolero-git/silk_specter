@@ -499,34 +499,34 @@ silk_specter_hard,130,Which ATT&CK technique ID is associated with the file-dele
 | search ""delete"" OR ""del "" OR ""rm "" OR ""portproxy""
 | sort _time
 | table _time host sourcetype source User Image CommandLine TargetFilename _raw"
-silk_specter_hard,131,Which Hard detection identifies a new vendor VPN source without requiring failed logons?,,,125,0,,notable_triage,H131,stash,Triage sparse campaign findings among heavy alert noise and authorization lookalikes,"index=notable source=notable sourcetype=stash scenario=hard
+silk_specter_hard,131,Which Hard detection identifies a new vendor VPN source without requiring failed logons?,,,125,0,,notable_triage,H131,stash,Triage sparse campaign findings among heavy alert noise and authorization lookalikes,"index=notable host=SILK-SPECTER-ES sourcetype=stash scenario=hard
 | stats count earliest(_time) as first_seen latest(_time) as last_seen values(severity) as severity values(src) as src values(dest) as dest by search_name
 | sort first_seen"
-silk_specter_hard,132,Which Hard detection identifies the unauthorized 8443 forwarding rule?,,,125,0,,notable_triage,H132,stash,Triage sparse campaign findings among heavy alert noise and authorization lookalikes,"index=notable source=notable sourcetype=stash scenario=hard
+silk_specter_hard,132,Which Hard detection identifies the unauthorized 8443 forwarding rule?,,,125,0,,notable_triage,H132,stash,Triage sparse campaign findings among heavy alert noise and authorization lookalikes,"index=notable host=SILK-SPECTER-ES sourcetype=stash scenario=hard
 | stats count earliest(_time) as first_seen latest(_time) as last_seen values(severity) as severity values(src) as src values(dest) as dest by search_name
 | sort first_seen"
-silk_specter_hard,133,Which Hard detection identifies remote WinRM into the Tokyo OT-adjacent host?,,,125,0,,notable_triage,H133,stash,Triage sparse campaign findings among heavy alert noise and authorization lookalikes,"index=notable source=notable sourcetype=stash scenario=hard
+silk_specter_hard,133,Which Hard detection identifies remote WinRM into the Tokyo OT-adjacent host?,,,125,0,,notable_triage,H133,stash,Triage sparse campaign findings among heavy alert noise and authorization lookalikes,"index=notable host=SILK-SPECTER-ES sourcetype=stash scenario=hard
 | stats count earliest(_time) as first_seen latest(_time) as last_seen values(severity) as severity values(src) as src values(dest) as dest by search_name
 | sort first_seen"
-silk_specter_hard,134,Which Hard detection identifies native PowerShell archive staging on the historian host?,,,125,0,,notable_triage,H134,stash,Triage sparse campaign findings among heavy alert noise and authorization lookalikes,"index=notable source=notable sourcetype=stash scenario=hard
+silk_specter_hard,134,Which Hard detection identifies native PowerShell archive staging on the historian host?,,,125,0,,notable_triage,H134,stash,Triage sparse campaign findings among heavy alert noise and authorization lookalikes,"index=notable host=SILK-SPECTER-ES sourcetype=stash scenario=hard
 | stats count earliest(_time) as first_seen latest(_time) as last_seen values(severity) as severity values(src) as src values(dest) as dest by search_name
 | sort first_seen"
-silk_specter_hard,135,Which Hard detection identifies MFT use without matching approved change context?,,,125,0,,notable_triage,H135,stash,Triage sparse campaign findings among heavy alert noise and authorization lookalikes,"index=notable source=notable sourcetype=stash scenario=hard
+silk_specter_hard,135,Which Hard detection identifies MFT use without matching approved change context?,,,125,0,,notable_triage,H135,stash,Triage sparse campaign findings among heavy alert noise and authorization lookalikes,"index=notable host=SILK-SPECTER-ES sourcetype=stash scenario=hard
 | stats count earliest(_time) as first_seen latest(_time) as last_seen values(severity) as severity values(src) as src values(dest) as dest by search_name
 | sort first_seen"
-silk_specter_hard,136,How many Hard detection searches are intentionally provided?,,,125,0,,notable_triage,H136,stash,Triage sparse campaign findings among heavy alert noise and authorization lookalikes,"index=notable source=notable sourcetype=stash scenario=hard
+silk_specter_hard,136,How many Hard detection searches are intentionally provided?,,,125,0,,notable_triage,H136,stash,Triage sparse campaign findings among heavy alert noise and authorization lookalikes,"index=notable host=SILK-SPECTER-ES sourcetype=stash scenario=hard
 | stats count earliest(_time) as first_seen latest(_time) as last_seen values(severity) as severity values(src) as src values(dest) as dest by search_name
 | sort first_seen"
-silk_specter_hard,137,Which detection is expected to produce both benign and malicious context requiring change-control review?,,,125,0,,notable_triage,H137,stash,Triage sparse campaign findings among heavy alert noise and authorization lookalikes,"index=notable source=notable sourcetype=stash scenario=hard
+silk_specter_hard,137,Which detection is expected to produce both benign and malicious context requiring change-control review?,,,125,0,,notable_triage,H137,stash,Triage sparse campaign findings among heavy alert noise and authorization lookalikes,"index=notable host=SILK-SPECTER-ES sourcetype=stash scenario=hard
 | stats count earliest(_time) as first_seen latest(_time) as last_seen values(severity) as severity values(src) as src values(dest) as dest by search_name
 | sort first_seen"
-silk_specter_hard,138,Which detection occurs latest in the attack chain?,,,125,0,,notable_triage,H138,stash,Triage sparse campaign findings among heavy alert noise and authorization lookalikes,"index=notable source=notable sourcetype=stash scenario=hard
+silk_specter_hard,138,Which detection occurs latest in the attack chain?,,,125,0,,notable_triage,H138,stash,Triage sparse campaign findings among heavy alert noise and authorization lookalikes,"index=notable host=SILK-SPECTER-ES sourcetype=stash scenario=hard
 | stats count earliest(_time) as first_seen latest(_time) as last_seen values(severity) as severity values(src) as src values(dest) as dest by search_name
 | sort first_seen"
-silk_specter_hard,139,Which activity has no dedicated Hard detection and must be found by hunting: credential discovery or portproxy creation?,,,125,0,,notable_triage,H139,stash,Triage sparse campaign findings among heavy alert noise and authorization lookalikes,"index=notable source=notable sourcetype=stash scenario=hard
+silk_specter_hard,139,Which activity has no dedicated Hard detection and must be found by hunting: credential discovery or portproxy creation?,,,125,0,,notable_triage,H139,stash,Triage sparse campaign findings among heavy alert noise and authorization lookalikes,"index=notable host=SILK-SPECTER-ES sourcetype=stash scenario=hard
 | stats count earliest(_time) as first_seen latest(_time) as last_seen values(severity) as severity values(src) as src values(dest) as dest by search_name
 | sort first_seen"
-silk_specter_hard,140,Which evidence source is central to separating approved from unapproved MFT use?,,,125,0,,notable_triage,H140,stash,Triage sparse campaign findings among heavy alert noise and authorization lookalikes,"index=notable source=notable sourcetype=stash scenario=hard
+silk_specter_hard,140,Which evidence source is central to separating approved from unapproved MFT use?,,,125,0,,notable_triage,H140,stash,Triage sparse campaign findings among heavy alert noise and authorization lookalikes,"index=notable host=SILK-SPECTER-ES sourcetype=stash scenario=hard
 | stats count earliest(_time) as first_seen latest(_time) as last_seen values(severity) as severity values(src) as src values(dest) as dest by search_name
 | sort first_seen"
 silk_specter_hard,141,What is the ordered sequence of primary campaign regions from initial access through exfil staging? Answer format example: value1>value2>value3 (use > between values; spaces are optional; order matters).,,,130,0,,campaign_reconstruction,H141,multi-source,Reconstruct the full hard campaign from sparse cross-domain evidence,"index=<index> earliest=1775433600 latest=1775865600

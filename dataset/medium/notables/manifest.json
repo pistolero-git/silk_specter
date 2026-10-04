@@ -5,7 +5,9 @@
   "noise_notables": 60,
   "sourcetype": "stash",
   "source": "per-event search_name",
-  "stash_schema": "es8-native-kv-v2",
+  "stash_schema": "es8-direct-notable-kv-v3",
+  "notable_model": "non-rba-direct-event",
+  "source_events_per_notable": 1,
   "canonical_ingest_file": "hec/events.jsonl",
   "participant_filter": "index=notable host=SILK-SPECTER-ES sourcetype=stash scenario=medium",
   "required_finding_fields": [
@@ -13,11 +15,20 @@
     "rule_description",
     "entity",
     "entity_type",
-    "risk_score",
+    "finding_score",
     "severity",
     "urgency",
     "status_label",
     "security_domain",
+    "source_event_id",
     "drilldown_search"
+  ],
+  "forbidden_rba_fields": [
+    "all_risk_objects",
+    "normalized_risk_object",
+    "risk_object",
+    "risk_object_type",
+    "risk_score",
+    "risk_event_count"
   ]
 }

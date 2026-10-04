@@ -154,40 +154,40 @@ silk_specter_medium,152,Which Linux host deletes the final staged archive?,,,65,
 silk_specter_medium,153,What Linux command removes the final staging archive?,,,65,0,,cleanup,M153,"XmlWinEventLog,syslog",Identify post-exfiltration artifact cleanup,"index=<index> (host=DEFR-ENG-APP-03 OR host=NLAM-OPS-LNX-04) (""del /q"" OR ""/usr/bin/rm"") | table _time host sourcetype Image CommandLine"
 silk_specter_medium,154,Which ATT&CK technique ID maps to both cleanup actions?,,,65,0,,cleanup,M154,"XmlWinEventLog,syslog",Identify post-exfiltration artifact cleanup,"index=<index> (host=DEFR-ENG-APP-03 OR host=NLAM-OPS-LNX-04) (""del /q"" OR ""/usr/bin/rm"") | table _time host sourcetype Image CommandLine"
 silk_specter_medium,155,What is the ordered regional progression of the actor from initial access through the later staging/exfiltration path? Answer format example: value1>value2>value3 (use > between values; spaces are optional; order matters).,,,90,0,,campaign_reconstruction,M155,"radius,XmlWinEventLog,linux_secure",Reconstruct the multi-region campaign from correlated evidence,index=<index> (host=UKLO-RADIUS-01 OR host=DEFR-ENG-APP-03 OR host=AUSY-RADIUS-01 OR host=NLAM-OPS-LNX-04) | sort _time | table _time host sourcetype _raw
-silk_specter_medium,156,Which Medium detection is intended to surface repeated UKLO VPN failures followed by a success?,,,70,0,,notable_triage,M156,stash,Triage noisy findings and validate useful pivots against raw telemetry,"index=notable source=notable sourcetype=stash scenario=medium
+silk_specter_medium,156,Which Medium detection is intended to surface repeated UKLO VPN failures followed by a success?,,,70,0,,notable_triage,M156,stash,Triage noisy findings and validate useful pivots against raw telemetry,"index=notable host=SILK-SPECTER-ES sourcetype=stash scenario=medium
 | stats count earliest(_time) as first_seen latest(_time) as last_seen values(severity) as severity values(src) as src values(dest) as dest by search_name
 | sort first_seen"
-silk_specter_medium,157,What severity is assigned by the Medium detection pack to the VPN failure-to-success finding?,,,70,0,,notable_triage,M157,stash,Triage noisy findings and validate useful pivots against raw telemetry,"index=notable source=notable sourcetype=stash scenario=medium
+silk_specter_medium,157,What severity is assigned by the Medium detection pack to the VPN failure-to-success finding?,,,70,0,,notable_triage,M157,stash,Triage noisy findings and validate useful pivots against raw telemetry,"index=notable host=SILK-SPECTER-ES sourcetype=stash scenario=medium
 | stats count earliest(_time) as first_seen latest(_time) as last_seen values(severity) as severity values(src) as src values(dest) as dest by search_name
 | sort first_seen"
-silk_specter_medium,158,Which Medium detection targets the cross-region WMI/DCOM pivot?,,,70,0,,notable_triage,M158,stash,Triage noisy findings and validate useful pivots against raw telemetry,"index=notable source=notable sourcetype=stash scenario=medium
+silk_specter_medium,158,Which Medium detection targets the cross-region WMI/DCOM pivot?,,,70,0,,notable_triage,M158,stash,Triage noisy findings and validate useful pivots against raw telemetry,"index=notable host=SILK-SPECTER-ES sourcetype=stash scenario=medium
 | stats count earliest(_time) as first_seen latest(_time) as last_seen values(severity) as severity values(src) as src values(dest) as dest by search_name
 | sort first_seen"
-silk_specter_medium,159,What severity is assigned to the cross-region WMI finding?,,,70,0,,notable_triage,M159,stash,Triage noisy findings and validate useful pivots against raw telemetry,"index=notable source=notable sourcetype=stash scenario=medium
+silk_specter_medium,159,What severity is assigned to the cross-region WMI finding?,,,70,0,,notable_triage,M159,stash,Triage noisy findings and validate useful pivots against raw telemetry,"index=notable host=SILK-SPECTER-ES sourcetype=stash scenario=medium
 | stats count earliest(_time) as first_seen latest(_time) as last_seen values(severity) as severity values(src) as src values(dest) as dest by search_name
 | sort first_seen"
-silk_specter_medium,160,Which Medium detection surfaces the LSASS access already seen by Defender?,,,70,0,,notable_triage,M160,stash,Triage noisy findings and validate useful pivots against raw telemetry,"index=notable source=notable sourcetype=stash scenario=medium
+silk_specter_medium,160,Which Medium detection surfaces the LSASS access already seen by Defender?,,,70,0,,notable_triage,M160,stash,Triage noisy findings and validate useful pivots against raw telemetry,"index=notable host=SILK-SPECTER-ES sourcetype=stash scenario=medium
 | stats count earliest(_time) as first_seen latest(_time) as last_seen values(severity) as severity values(src) as src values(dest) as dest by search_name
 | sort first_seen"
-silk_specter_medium,161,What severity is assigned to the LSASS corroboration finding?,,,70,0,,notable_triage,M161,stash,Triage noisy findings and validate useful pivots against raw telemetry,"index=notable source=notable sourcetype=stash scenario=medium
+silk_specter_medium,161,What severity is assigned to the LSASS corroboration finding?,,,70,0,,notable_triage,M161,stash,Triage noisy findings and validate useful pivots against raw telemetry,"index=notable host=SILK-SPECTER-ES sourcetype=stash scenario=medium
 | stats count earliest(_time) as first_seen latest(_time) as last_seen values(severity) as severity values(src) as src values(dest) as dest by search_name
 | sort first_seen"
-silk_specter_medium,162,Which Medium detection covers the GitLab repository archive download from the DE host?,,,70,0,,notable_triage,M162,stash,Triage noisy findings and validate useful pivots against raw telemetry,"index=notable source=notable sourcetype=stash scenario=medium
+silk_specter_medium,162,Which Medium detection covers the GitLab repository archive download from the DE host?,,,70,0,,notable_triage,M162,stash,Triage noisy findings and validate useful pivots against raw telemetry,"index=notable host=SILK-SPECTER-ES sourcetype=stash scenario=medium
 | stats count earliest(_time) as first_seen latest(_time) as last_seen values(severity) as severity values(src) as src values(dest) as dest by search_name
 | sort first_seen"
-silk_specter_medium,163,Which Medium detection covers the burst of AWS API activity from the DE engineering IP?,,,70,0,,notable_triage,M163,stash,Triage noisy findings and validate useful pivots against raw telemetry,"index=notable source=notable sourcetype=stash scenario=medium
+silk_specter_medium,163,Which Medium detection covers the burst of AWS API activity from the DE engineering IP?,,,70,0,,notable_triage,M163,stash,Triage noisy findings and validate useful pivots against raw telemetry,"index=notable host=SILK-SPECTER-ES sourcetype=stash scenario=medium
 | stats count earliest(_time) as first_seen latest(_time) as last_seen values(severity) as severity values(src) as src values(dest) as dest by search_name
 | sort first_seen"
-silk_specter_medium,164,Which Medium detection surfaces deliberate archive staging with 7-Zip?,,,70,0,,notable_triage,M164,stash,Triage noisy findings and validate useful pivots against raw telemetry,"index=notable source=notable sourcetype=stash scenario=medium
+silk_specter_medium,164,Which Medium detection surfaces deliberate archive staging with 7-Zip?,,,70,0,,notable_triage,M164,stash,Triage noisy findings and validate useful pivots against raw telemetry,"index=notable host=SILK-SPECTER-ES sourcetype=stash scenario=medium
 | stats count earliest(_time) as first_seen latest(_time) as last_seen values(severity) as severity values(src) as src values(dest) as dest by search_name
 | sort first_seen"
-silk_specter_medium,165,Which Medium detection is designed to catch reuse of the same VPN identity/source across UK and Australia?,,,70,0,,notable_triage,M165,stash,Triage noisy findings and validate useful pivots against raw telemetry,"index=notable source=notable sourcetype=stash scenario=medium
+silk_specter_medium,165,Which Medium detection is designed to catch reuse of the same VPN identity/source across UK and Australia?,,,70,0,,notable_triage,M165,stash,Triage noisy findings and validate useful pivots against raw telemetry,"index=notable host=SILK-SPECTER-ES sourcetype=stash scenario=medium
 | stats count earliest(_time) as first_seen latest(_time) as last_seen values(severity) as severity values(src) as src values(dest) as dest by search_name
 | sort first_seen"
-silk_specter_medium,166,Which Medium detection covers the final outbound transfer from NLAM?,,,70,0,,notable_triage,M166,stash,Triage noisy findings and validate useful pivots against raw telemetry,"index=notable source=notable sourcetype=stash scenario=medium
+silk_specter_medium,166,Which Medium detection covers the final outbound transfer from NLAM?,,,70,0,,notable_triage,M166,stash,Triage noisy findings and validate useful pivots against raw telemetry,"index=notable host=SILK-SPECTER-ES sourcetype=stash scenario=medium
 | stats count earliest(_time) as first_seen latest(_time) as last_seen values(severity) as severity values(src) as src values(dest) as dest by search_name
 | sort first_seen"
-silk_specter_medium,167,What severity is assigned to the final outbound HTTPS finding?,,,70,0,,notable_triage,M167,stash,Triage noisy findings and validate useful pivots against raw telemetry,"index=notable source=notable sourcetype=stash scenario=medium
+silk_specter_medium,167,What severity is assigned to the final outbound HTTPS finding?,,,70,0,,notable_triage,M167,stash,Triage noisy findings and validate useful pivots against raw telemetry,"index=notable host=SILK-SPECTER-ES sourcetype=stash scenario=medium
 | stats count earliest(_time) as first_seen latest(_time) as last_seen values(severity) as severity values(src) as src values(dest) as dest by search_name
 | sort first_seen"
 silk_specter_medium,168,Which DLP action prevents the DLP event from being treated as definitive blocking evidence?,,,70,0,,notable_triage,M168,dlp:events,Triage noisy findings and validate useful pivots against raw telemetry,"index=<index> host=NLAM-DLP-01 sourcetype=dlp:events ""sysdiag-20260409.tgz""
@@ -196,6 +196,6 @@ silk_specter_medium,169,Which benign activity is expected to resemble large outb
 | search ""partner-engineering.example"" OR ""turbine-model-export.zip"" OR ""34.240.118.91""
 | sort _time
 | table _time host sourcetype user filename destination src_ip dest_ip bytes action status"
-silk_specter_medium,170,"After triaging Medium findings against raw telemetry, how many distinct campaign-relevant Medium detection findings remain?",,,70,0,,notable_triage,M170,stash,Triage noisy findings and validate useful pivots against raw telemetry,"index=notable source=notable sourcetype=stash scenario=medium
+silk_specter_medium,170,"After triaging Medium findings against raw telemetry, how many distinct campaign-relevant Medium detection findings remain?",,,70,0,,notable_triage,M170,stash,Triage noisy findings and validate useful pivots against raw telemetry,"index=notable host=SILK-SPECTER-ES sourcetype=stash scenario=medium
 | stats count earliest(_time) as first_seen latest(_time) as last_seen values(severity) as severity values(src) as src values(dest) as dest by search_name
 | sort first_seen"

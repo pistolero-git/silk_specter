@@ -45,6 +45,11 @@
 
 ### Notables
 
+- Reworked all Easy/Medium/Hard synthetic notables as direct **non-RBA** notable events.
+- Every notable is backed by exactly one event already present in the generated participant dataset.
+- Removed RBA aggregation fields (`risk_object*`, `risk_score`, `risk_event_count`, `all_risk_objects`, `normalized_risk_object`) and intermediate-finding semantics.
+- Campaign notables use one authored APT event; benign/questionable alert noise uses one deterministic generated background event.
+- `source_count=1` for every notable and drilldowns point to the single backing source event.
 - Added deterministic synthetic ES-style notable feeds under `dataset/<track>/notables/`.
 - Added expected campaign findings plus benign/questionable notable noise.
 - Noise scales with difficulty: Easy 25, Medium 60, Hard 120 noise events.

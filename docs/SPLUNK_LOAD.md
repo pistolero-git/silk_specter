@@ -49,7 +49,7 @@ CREATE_NOTABLE_INDEX=1 \
 ```
 
 ```spl
-index=notable source=notable sourcetype=stash scenario=medium
+index=notable host=SILK-SPECTER-ES sourcetype=stash scenario=medium
 | stats count by rule_name urgency
 ```
 

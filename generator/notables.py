@@ -1,14 +1,16 @@
 #!/usr/bin/env python3
-"""Build deterministic Splunk ES-style finding/notable events for SILK SPECTER.
+"""Build deterministic non-RBA Splunk ES notable events for SILK SPECTER.
 
-The main dataset contains source telemetry. This module creates a separate
-``source=notable sourcetype=stash`` feed containing authored campaign findings
-plus benign/questionable alert noise.
+Every synthetic notable is a direct correlation-search-style result backed by
+exactly one event that already exists in the generated APT dataset. Campaign
+notables point at authored static evidence. Benign/questionable noise notables
+point at deterministic background events from the generated participant corpus.
 
-The generated ``_raw`` intentionally follows the native stash/modaction shape
-seen in Enterprise Security: an epoch prefix followed by comma-separated
-``key=\"value\"`` fields. Participant data never includes instructor truth such
-as expected disposition or activity IDs.
+No RBA aggregation fields are emitted: there are no risk objects, risk-event
+counts, or intermediate findings associated with a notable. The generated
+``_raw`` follows the native stash/modaction shape used by Enterprise Security.
+Participant data never includes instructor truth such as expected disposition,
+activity IDs, or truth labels.
 """
 from __future__ import annotations
 
@@ -86,7 +88,7 @@ SEVERITY_WORDS = {
     "recon": "medium",
 }
 
-RISK_SCORES = {
+FINDING_SCORES = {
     "critical": 90,
     "high": 70,
     "medium": 50,
@@ -214,6 +216,190 @@ def choose_entity(domain: str, src: str, dest: str, user: str) -> tuple[str, str
     return "unknown", "other"
 
 
+
+def _search_quote(value: object) -> str:
+    text = str(value if value is not None else "")
+    return '"' + text.replace('\\', '\\\\').replace('"', '\\"') + '"'
+
+
+def source_event_id_for_generated(row: dict) -> str:
+    material = "|".join(
+        str(row.get(key, ""))
+        for key in ("time", "host", "source", "sourcetype", "event")
+    )
+    return str(uuid.uuid5(uuid.NAMESPACE_URL, "silk-specter:generated-source:" + material))
+
+
+def event_drilldown(source_index: str, row: dict, event_time: datetime) -> str:
+    earliest = int(event_time.timestamp()) - 1
+    latest = int(event_time.timestamp()) + 2
+    return (
+        f"index={source_index} earliest={earliest} latest={latest} "
+        f"host={_search_quote(row.get('host', ''))} "
+        f"source={_search_quote(row.get('source', ''))} "
+        f"sourcetype={_search_quote(row.get('sourcetype', ''))}"
+    )
+
+
+def representative_event(rows: list[dict], rule_name: str, used_event_ids: set[str]) -> dict:
+    """Pick one real authored event to back one direct, non-RBA notable."""
+    low = rule_name.lower()
+
+    def score(row: dict) -> tuple[int, str]:
+        st = str(row.get("sourcetype", "")).lower()
+        src = str(row.get("source", "")).lower()
+        raw = str(row.get("raw", "")).lower()
+        hay = " ".join((st, src, raw[:2000]))
+        points = 0
+        preferences = [
+            (("shell", "powershell"), ("sysmon", "xmlwineventlog", "4688", "eventid>1<", "powershell"), 40),
+            (("web", "exploit", "public-facing"), ("waf", "access_combined", "apache", "bro:http", "http"), 40),
+            (("vpn", "authentication", "valid account", "service account"), ("radius", "4624", "4625", "vpn", "pan:traffic"), 40),
+            (("wmi",), ("dce_rpc", "wmi", "xmlwineventlog", "4624", "4688"), 45),
+            (("lsass", "credential"), ("lsass", "sysmon", "defender", "xmlwineventlog"), 45),
+            (("gitlab",), ("gitlab", "bro:http", "bro:ssl"), 45),
+            (("cloud", "aws"), ("cloudtrail", "aws:"), 45),
+            (("archive", "staging"), ("7z", "compress-archive", "sysmon", "xmlwineventlog", "linux_audit"), 45),
+            (("outbound", "transfer", "exfil", "mft", "dlp"), ("mft", "dlp", "bro:conn", "bro:http", "bro:ssl", "pan:traffic", "fortigate"), 45),
+            (("portproxy",), ("portproxy", "netsh", "sysmon", "xmlwineventlog"), 50),
+            (("winrm",), ("winrm", "5985", "5986", "xmlwineventlog", "bro:conn"), 50),
+            (("scanner", "recon"), ("tenable", "bro:conn", "bro:dns", "pan:traffic"), 35),
+            (("change",), ("servicenow", "change_request"), 35),
+        ]
+        for rule_tokens, evidence_tokens, weight in preferences:
+            if any(token in low for token in rule_tokens) and any(token in hay for token in evidence_tokens):
+                points += weight
+        if row.get("event_id") not in used_event_ids:
+            points += 10
+        # Prefer the earliest equally-good source event for deterministic results.
+        return points, str(row.get("time", ""))
+
+    ranked = sorted(rows, key=lambda row: (-score(row)[0], score(row)[1], str(row.get("event_id", ""))))
+    if not ranked:
+        raise ValueError(f"No source events available for rule {rule_name!r}")
+    chosen = ranked[0]
+    used_event_ids.add(str(chosen.get("event_id", "")))
+    return chosen
+
+
+def classify_background_event(row: dict) -> tuple[str, str, str] | None:
+    """Map one generated background event to a plausible direct notable rule."""
+    st = str(row.get("sourcetype", "")).lower()
+    src = str(row.get("source", "")).lower()
+    raw = str(row.get("event", ""))
+    low = raw.lower()
+
+    if st == "xmlwineventlog":
+        m = re.search(r"<EventID>(\d+)</EventID>", raw)
+        event_id = m.group(1) if m else ""
+        if event_id == "4625":
+            return "Failed Logon From Workstation", "medium", "access"
+        if event_id == "4624":
+            return "Interactive Logon From User Workstation", "low", "access"
+        if event_id == "1":
+            return "Rare Process Execution On Endpoint", "low", "endpoint"
+        if event_id == "3":
+            return "Unusual Endpoint Network Connection", "medium", "network"
+        if event_id == "11":
+            return "Executable Written To Endpoint", "medium", "endpoint"
+        if event_id == "22":
+            return "Rare DNS Query From Endpoint", "low", "network"
+        return "Windows Security Activity Review", "low", "endpoint"
+    if st in {"bro:dns:json", "zeek:dns"}:
+        return "Rare DNS Query From User Segment", "low", "network"
+    if st in {"bro:conn:json", "zeek:conn"}:
+        return "Rare Outbound Connection From User Segment", "low", "network"
+    if st in {"bro:http:json", "zeek:http"}:
+        return "Rare HTTP Request To External Service", "low", "network"
+    if st in {"bro:ssl:json", "zeek:tls", "zeek:ssl"}:
+        return "TLS Connection To Rare Destination", "low", "network"
+    if st in {"pan:traffic", "fortigate_traffic", "cisco:asa", "juniper:junos:firewall"}:
+        return "Firewall Connection Pattern Review", "low", "network"
+    if st == "aws:cloudtrail":
+        return "Cloud API Activity From New Source", "medium", "threat"
+    if st == "aws:cloudwatchlogs:vpcflow":
+        return "Cloud Network Flow Anomaly", "low", "network"
+    if st == "ms:defender:eventhub":
+        return "Endpoint Security Alert", "medium", "endpoint"
+    if st in {"linux_secure", "linux:secure"}:
+        return "SSH Authentication Activity", "low", "access"
+    if st in {"linux_audit", "auditd"}:
+        return "Privileged Linux Activity", "medium", "endpoint"
+    if st.startswith("radius") or src.startswith("radius"):
+        return "Remote Access Authentication Review", "medium", "access"
+    if st == "pacs:access":
+        return "Physical Access Pattern Review", "low", "access"
+    if "mft" in st or "mft" in src:
+        return "Large File Transfer To Approved Partner", "medium", "network"
+    if "dlp" in st or "dlp" in src:
+        return "DLP Policy Match With User Justification", "medium", "threat"
+    if "servicenow" in st or "servicenow" in src:
+        return "Change Activity Requiring Validation", "low", "audit"
+    if "gitlab" in st or "gitlab" in src:
+        return "Git Repository Activity Review", "low", "threat"
+    if st.startswith("sccm") or "ivanti" in st or "wsus" in st:
+        return "Administrative Software Deployment", "low", "endpoint"
+    if "smb_files" in st:
+        return "High Volume SMB Read", "medium", "network"
+    if "code42" in st:
+        return "Data Protection Activity Review", "medium", "threat"
+    return None
+
+
+def load_generated_background_events(dataset_dir: Path, truth: list[dict]) -> list[dict]:
+    path = dataset_dir / "hec" / "events.jsonl"
+    if not path.is_file():
+        raise FileNotFoundError(f"Missing generated participant HEC data: {path}")
+    head = path.read_text(encoding="utf-8", errors="replace")[:128]
+    if head.startswith("version https://git-lfs.github.com/spec/v1"):
+        raise RuntimeError(
+            f"Generated HEC data is an unmaterialized Git LFS pointer: {path}. "
+            "Run make generate-<track> before rebuilding notables."
+        )
+    static_signatures = {
+        (str(row.get("host", "")), str(row.get("source", "")), str(row.get("sourcetype", "")), str(row.get("raw", "")))
+        for row in truth
+    }
+    events = []
+    with path.open(encoding="utf-8") as f:
+        for line in f:
+            if not line.strip():
+                continue
+            row = json.loads(line)
+            sig = (str(row.get("host", "")), str(row.get("source", "")), str(row.get("sourcetype", "")), str(row.get("event", "")))
+            if sig in static_signatures:
+                continue
+            events.append(row)
+    return events
+
+
+def select_noise_events(events: list[dict], count: int, rng: random.Random) -> list[tuple[dict, str, str, str]]:
+    by_rule: dict[str, list[tuple[dict, str, str, str]]] = defaultdict(list)
+    for row in events:
+        classified = classify_background_event(row)
+        if classified is None:
+            continue
+        title, urgency, domain = classified
+        by_rule[title].append((row, title, urgency, domain))
+    if sum(len(v) for v in by_rule.values()) < count:
+        raise ValueError(f"Only {sum(len(v) for v in by_rule.values())} usable generated background events for {count} noise notables")
+    for values in by_rule.values():
+        rng.shuffle(values)
+    rules = sorted(by_rule)
+    rng.shuffle(rules)
+    selected: list[tuple[dict, str, str, str]] = []
+    while len(selected) < count:
+        progressed = False
+        for rule in rules:
+            if by_rule[rule]:
+                selected.append(by_rule[rule].pop())
+                progressed = True
+                if len(selected) == count:
+                    break
+        if not progressed:
+            break
+    return selected
+
 def attack_annotations(rule_name: str, kind: str) -> str:
     annotation: dict[str, list[str]] = {
         "analytic_story": ["SILK SPECTER"],
@@ -234,6 +420,7 @@ def attack_annotations(rule_name: str, kind: str) -> str:
 def notable_raw(
     *,
     event_id: str,
+    source_event_id: str,
     rule_name: str,
     description: str,
     urgency: str,
@@ -245,19 +432,17 @@ def notable_raw(
     user: str,
     entity: str,
     entity_type: str,
-    risk_score: int,
-    source_count: int,
+    finding_score: int,
     drilldown_search: str,
     event_time: float,
     kind: str,
 ) -> str:
-    """Render a native-looking ES stash/modaction finding record."""
+    """Render one direct, non-RBA ES notable backed by one source event."""
     epoch = int(event_time)
     search_name = f"SS - {rule_name} - Rule"
     rule_id = str(uuid.uuid5(uuid.NAMESPACE_URL, f"silk-specter:rule:{scenario}:{rule_name}"))
     detection_id = str(uuid.uuid5(uuid.NAMESPACE_URL, f"silk-specter:detection:{scenario}:{rule_name}"))
-    source_event_id = str(uuid.uuid5(uuid.NAMESPACE_URL, f"silk-specter:source-event:{event_id}"))
-    source_guid = str(uuid.uuid5(uuid.NAMESPACE_URL, f"silk-specter:source-guid:{event_id}"))
+    source_guid = str(uuid.uuid5(uuid.NAMESPACE_URL, f"silk-specter:source-guid:{source_event_id}"))
     annotations = attack_annotations(rule_name, kind)
 
     asset_type = {
@@ -299,14 +484,10 @@ def notable_raw(
         ("notable_type", "notable"),
         ("entity", entity),
         ("entity_type", entity_type),
-        ("all_risk_objects", entity),
-        ("normalized_risk_object", entity),
-        ("risk_object", entity),
-        ("risk_object_type", entity_type),
-        ("risk_score", risk_score),
-        ("finding_score", risk_score),
-        ("risk_event_count", source_count),
-        ("source_count", source_count),
+        ("finding_score", finding_score),
+        # A non-RBA notable is one correlation-search result, not an aggregation
+        # of intermediate findings. Keep this count at exactly one.
+        ("source_count", 1),
         ("source_event_id", source_event_id),
         ("source_guid", source_guid),
         ("orig_queue_id", "__system_default_queue__"),
@@ -326,28 +507,23 @@ def notable_raw(
         ("src", src),
         ("dest", dest),
         ("user", user),
-        ("drilldown_name", "View contributing events"),
+        ("drilldown_name", "View source event"),
         ("drilldown_search", drilldown_search),
-        ("contributing_events_search", drilldown_search),
-        ("nes_fields", "src,dest,user,entity,entity_type,risk_score"),
+        ("nes_fields", "src,dest,user,entity,entity_type,finding_score"),
     ]
     annotation_obj = json.loads(annotations)
     if annotation_obj.get("mitre_attack"):
         fields.append(("annotations.mitre_attack", annotation_obj["mitre_attack"][0]))
         fields.append(("annotations.mitre_attack.mitre_technique", annotation_obj["mitre_attack_technique"][0]))
         fields.append(("annotations.mitre_attack.mitre_tactic", annotation_obj["mitre_attack_tactic"][0]))
-    if entity_type == "system":
-        fields.append(("risk_object_system", entity))
 
-    # Splunk stash events are conventionally emitted as:
-    #   <epoch>, key="value", key="value", ...
     return f"{epoch}, " + ", ".join(f"{key}={q(value)}" for key, value in fields)
 
 
 def campaign_description(finding: dict, source_index: str) -> str:
     notes = (finding.get("notes") or "").strip()
     base = notes.rstrip(".") if notes else finding["detection_name"]
-    return f"{base}. Review contributing telemetry in {source_index} and validate the entity against normal Asteron activity."
+    return f"{base}. Review the linked source event in {source_index} and validate the entity against normal Asteron activity."
 
 
 def noise_description(title: str, src: str, dest: str, user: str) -> str:
@@ -381,8 +557,6 @@ def build_notables(root: Path, scenario: str, dataset_dir: Path, cfg: dict) -> d
     for row in truth:
         activity_rows[row["activity_id"]].append(row)
 
-    start = parse_iso(cfg["start"])
-    end = parse_iso(cfg["end"])
     seed = int(cfg.get("seed", 0)) + 47001
     rng = random.Random(seed)
     noise_count = int(cfg.get("notables", {}).get("noise_events", 0))
@@ -390,25 +564,28 @@ def build_notables(root: Path, scenario: str, dataset_dir: Path, cfg: dict) -> d
 
     records = []
     instructor_rows = []
+    used_campaign_source_ids: set[str] = set()
 
-    # Campaign findings. Stable offsets preserve deterministic event times when
-    # multiple findings are tied to the same authored activity.
-    per_activity = defaultdict(int)
+    # Direct campaign notables. Each detection result points to one authored APT
+    # event. Separate detection rules may legitimately fire on the same activity,
+    # but there is never a many-finding/RBA aggregation inside one notable.
     for finding in findings:
         activity = finding["activity_id"]
         rows = activity_rows[activity]
-        offset = per_activity[activity]
-        per_activity[activity] += 1
-        dt = event_time_for_activity(activity_rows, activity, offset)
+        if not rows:
+            raise ValueError(f"No authored APT events found for {activity}")
         rule = finding["detection_name"]
+        source_row = representative_event(rows, rule, used_campaign_source_ids)
+        source_dt = parse_iso(source_row["time"])
+        dt = source_dt + timedelta(seconds=60)
         urgency = infer_urgency(rule)
         domain = infer_domain(rule)
-        src, dest, user = extract_observables(rows)
+        src, dest, user = extract_observables([source_row])
         entity, entity_type = choose_entity(domain, src, dest, user)
-        risk_score = RISK_SCORES.get(urgency, 0)
-        source_count = max(1, min(25, len(rows)))
+        finding_score = FINDING_SCORES.get(urgency, 0)
         event_id = str(uuid.uuid5(uuid.NAMESPACE_URL, f"silk-specter:notable:{scenario}:{finding['finding_id']}"))
-        drill = f"index={source_index} earliest={int(dt.timestamp())-300} latest={int(dt.timestamp())+300}"
+        source_event_id = str(source_row["event_id"])
+        drill = event_drilldown(source_index, source_row, source_dt)
         description = campaign_description(finding, source_index)
 
         records.append({
@@ -418,6 +595,7 @@ def build_notables(root: Path, scenario: str, dataset_dir: Path, cfg: dict) -> d
             "sourcetype": "stash",
             "event": notable_raw(
                 event_id=event_id,
+                source_event_id=source_event_id,
                 rule_name=rule,
                 description=description,
                 urgency=urgency,
@@ -429,8 +607,7 @@ def build_notables(root: Path, scenario: str, dataset_dir: Path, cfg: dict) -> d
                 user=user,
                 entity=entity,
                 entity_type=entity_type,
-                risk_score=risk_score,
-                source_count=source_count,
+                finding_score=finding_score,
                 drilldown_search=drill,
                 event_time=dt.timestamp(),
                 kind="campaign",
@@ -446,30 +623,37 @@ def build_notables(root: Path, scenario: str, dataset_dir: Path, cfg: dict) -> d
             "kind": "campaign",
             "entity": entity,
             "entity_type": entity_type,
-            "risk_score": risk_score,
+            "finding_score": finding_score,
             "severity": urgency,
             "security_domain": domain,
-            "source_count": source_count,
+            "source_count": 1,
+            "source_event_id": source_event_id,
+            "source_host": source_row.get("host", ""),
+            "source": source_row.get("source", ""),
+            "source_sourcetype": source_row.get("sourcetype", ""),
             "notes": finding.get("notes", ""),
         })
 
-    # Benign/questionable alert noise. It is deliberately more numerous with
-    # difficulty, but deterministic so questions and instructor review remain stable.
-    sites = list(cfg.get("scope_sites", [])) or ["USHQ"]
-    window_seconds = max(1, int((end - start).total_seconds()))
-    for i in range(noise_count):
-        title, urgency, domain = rng.choice(NOISE_CATALOG)
-        dt = start + timedelta(seconds=rng.randint(900, max(901, window_seconds - 900)))
-        site = rng.choice(sites)
-        site_octet = 40 + (sum(ord(ch) for ch in site) % 20)
-        src = f"10.{site_octet}.40.{rng.randint(20, 220)}"
-        dest = f"{site}-SRV-{rng.randint(1, 24):02d}"
-        user = f"user{rng.randint(100, 999)}"
+    # Noise notables are also direct detections over real events already present
+    # in the generated participant corpus. No invented src/dest/user values and
+    # no synthetic intermediate findings are created.
+    background_events = load_generated_background_events(dataset_dir, truth)
+    selected_noise = select_noise_events(background_events, noise_count, rng)
+    for i, (source_row, title, urgency, domain) in enumerate(selected_noise):
+        source_dt = datetime.fromtimestamp(float(source_row["time"]), tz=parse_iso(cfg["start"]).tzinfo)
+        dt = source_dt + timedelta(seconds=60)
+        participant_row = {
+            "host": source_row.get("host", ""),
+            "source": source_row.get("source", ""),
+            "sourcetype": source_row.get("sourcetype", ""),
+            "raw": source_row.get("event", ""),
+        }
+        src, dest, user = extract_observables([participant_row])
         entity, entity_type = choose_entity(domain, src, dest, user)
-        risk_score = RISK_SCORES.get(urgency, 0)
-        source_count = rng.randint(1, 5)
-        event_id = str(uuid.uuid5(uuid.NAMESPACE_URL, f"silk-specter:notable-noise:{scenario}:{i}"))
-        drill = f"index={source_index} earliest={int(dt.timestamp())-300} latest={int(dt.timestamp())+300}"
+        finding_score = FINDING_SCORES.get(urgency, 0)
+        source_event_id = source_event_id_for_generated(source_row)
+        event_id = str(uuid.uuid5(uuid.NAMESPACE_URL, f"silk-specter:notable-noise:{scenario}:{source_event_id}"))
+        drill = event_drilldown(source_index, participant_row, source_dt)
         description = noise_description(title, src, dest, user)
 
         records.append({
@@ -479,6 +663,7 @@ def build_notables(root: Path, scenario: str, dataset_dir: Path, cfg: dict) -> d
             "sourcetype": "stash",
             "event": notable_raw(
                 event_id=event_id,
+                source_event_id=source_event_id,
                 rule_name=title,
                 description=description,
                 urgency=urgency,
@@ -490,8 +675,7 @@ def build_notables(root: Path, scenario: str, dataset_dir: Path, cfg: dict) -> d
                 user=user,
                 entity=entity,
                 entity_type=entity_type,
-                risk_score=risk_score,
-                source_count=source_count,
+                finding_score=finding_score,
                 drilldown_search=drill,
                 event_time=dt.timestamp(),
                 kind="noise",
@@ -507,11 +691,15 @@ def build_notables(root: Path, scenario: str, dataset_dir: Path, cfg: dict) -> d
             "kind": "noise",
             "entity": entity,
             "entity_type": entity_type,
-            "risk_score": risk_score,
+            "finding_score": finding_score,
             "severity": urgency,
             "security_domain": domain,
-            "source_count": source_count,
-            "notes": "Alert noise; participant must triage against raw telemetry.",
+            "source_count": 1,
+            "source_event_id": source_event_id,
+            "source_host": source_row.get("host", ""),
+            "source": source_row.get("source", ""),
+            "source_sourcetype": source_row.get("sourcetype", ""),
+            "notes": "Event-backed alert noise; participant must triage the linked raw event.",
         })
 
     records.sort(key=lambda r: (r["time"], r["event"]))
@@ -538,12 +726,18 @@ def build_notables(root: Path, scenario: str, dataset_dir: Path, cfg: dict) -> d
         "noise_notables": noise_count,
         "sourcetype": "stash",
         "source": "per-event search_name",
-        "stash_schema": "es8-native-kv-v2",
+        "stash_schema": "es8-direct-notable-kv-v3",
+        "notable_model": "non-rba-direct-event",
+        "source_events_per_notable": 1,
         "canonical_ingest_file": "hec/events.jsonl",
         "participant_filter": f"index=notable host=SILK-SPECTER-ES sourcetype=stash scenario={scenario}",
         "required_finding_fields": [
-            "rule_name", "rule_description", "entity", "entity_type", "risk_score",
-            "severity", "urgency", "status_label", "security_domain", "drilldown_search",
+            "rule_name", "rule_description", "entity", "entity_type", "finding_score",
+            "severity", "urgency", "status_label", "security_domain", "source_event_id", "drilldown_search",
+        ],
+        "forbidden_rba_fields": [
+            "all_risk_objects", "normalized_risk_object", "risk_object", "risk_object_type",
+            "risk_score", "risk_event_count",
         ],
     }
     (out / "manifest.json").write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
@@ -560,7 +754,8 @@ def build_notables(root: Path, scenario: str, dataset_dir: Path, cfg: dict) -> d
     with instructor_path.open("w", newline="", encoding="utf-8") as f:
         fields = [
             "event_id", "scenario", "time", "rule_name", "expected_disposition", "activity_id", "kind",
-            "entity", "entity_type", "risk_score", "severity", "security_domain", "source_count", "notes",
+            "entity", "entity_type", "finding_score", "severity", "security_domain", "source_count",
+            "source_event_id", "source_host", "source", "source_sourcetype", "notes",
         ]
         w = csv.DictWriter(f, fieldnames=fields)
         w.writeheader()

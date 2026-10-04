@@ -27,7 +27,7 @@ class NotableLoaderTests(unittest.TestCase):
         restart = text.index('podman restart --time')
         copy_data = text.index('podman cp "$PREPARED"')
         self.assertLess(restart, copy_data)
-        self.assertIn("events.jsonl.upload", text)
+        self.assertIn('HEC_UPLOAD="$HEC_REMOTE.upload"', text)
         self.assertIn('mv "$HEC_UPLOAD" "$HEC_REMOTE"', text)
 
 
