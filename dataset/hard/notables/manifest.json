@@ -5,6 +5,19 @@
   "noise_notables": 120,
   "sourcetype": "stash",
   "source": "notable",
+  "stash_schema": "es8-native-kv-v2",
   "canonical_ingest_file": "hec/events.jsonl",
-  "participant_filter": "index=notable source=notable sourcetype=stash scenario=hard"
+  "participant_filter": "index=notable source=notable sourcetype=stash scenario=hard",
+  "required_finding_fields": [
+    "rule_name",
+    "rule_description",
+    "entity",
+    "entity_type",
+    "risk_score",
+    "severity",
+    "urgency",
+    "status_label",
+    "security_domain",
+    "drilldown_search"
+  ]
 }

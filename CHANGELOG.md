@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+### ES finding/notable fidelity
+
+- Changed synthetic findings to the native comma-delimited `stash`/modaction record shape used by Splunk ES instead of simplified space-delimited key/value text.
+- Added realistic finding metadata including descriptions, entities/entity types, risk/finding scores, source counts, stable detection/source IDs, annotations, status fields, and drilldowns.
+- Enriched instructor notable ground truth with entity, score, severity, domain, and source-count context without exposing instructor disposition to participants.
+- Added runtime-facing notable schema tests and Quick Start parsing/cleanup validation.
+
+
 ### Medium/Hard static normalization
 
 - Expanded Medium static evidence from 65 to 1,250 events while preserving the original answer-bearing spine.

@@ -1,69 +1,69 @@
-event_id,scenario,time,rule_name,expected_disposition,activity_id,kind,notes
-24b88c08-2c90-55c2-ac13-dc05b9ad7a12,medium,2026-04-06T00:17:28Z,Large File Transfer To Approved Partner,benign,,noise,Synthetic alert noise; participant must triage against raw telemetry.
-88b20700-25f3-5730-ba9d-07777a46a136,medium,2026-04-06T06:34:24Z,New Service Installation,benign,,noise,Synthetic alert noise; participant must triage against raw telemetry.
-bf3fecf1-efc5-5aab-a274-647b6518fe1d,medium,2026-04-06T06:43:23Z,Remote Administration Tool Usage,benign,,noise,Synthetic alert noise; participant must triage against raw telemetry.
-fc86c00e-ad74-5b56-b319-65a43f5d177d,medium,2026-04-06T08:15:53Z,Unsigned Process From User Profile,benign,,noise,Synthetic alert noise; participant must triage against raw telemetry.
-8f86e985-ff27-5647-91e6-50a221ab5190,medium,2026-04-06T11:25:37Z,Large File Transfer To Approved Partner,benign,,noise,Synthetic alert noise; participant must triage against raw telemetry.
-2a6044dd-0e42-5c5f-8d4f-15e7a352b2e4,medium,2026-04-06T12:28:38Z,MFA Retry Pattern,questionable,,noise,Synthetic alert noise; participant must triage against raw telemetry.
-6e8def9c-bef7-58a2-8409-9f4219546bc6,medium,2026-04-06T12:40:06Z,Unusual Scheduled Task,benign,,noise,Synthetic alert noise; participant must triage against raw telemetry.
-79920afa-68bc-5fb0-96c1-db3b5eaba743,medium,2026-04-06T16:39:15Z,Unusual Scheduled Task,benign,,noise,Synthetic alert noise; participant must triage against raw telemetry.
-6d319722-4bf2-5449-8921-2448f9adc168,medium,2026-04-06T18:13:04Z,Suspicious VPN Failure-to-Success Sequence,malicious,MED-ACCESS-001,campaign,Useful access pivot; does not prove downstream compromise alone
-71f23159-480d-5efb-b28c-cdabdb00e955,medium,2026-04-06T19:03:31Z,Native LSASS Memory Access Corroborated,malicious,MED-CRED-001,campaign,Native tooling; Defender also observes related behavior
-3a39a960-c642-5ae2-b8eb-8bbe98d65a19,medium,2026-04-06T19:06:15Z,Rare DNS Query From User Segment,questionable,,noise,Synthetic alert noise; participant must triage against raw telemetry.
-10e1c527-82ba-5015-a74b-36ae2f2c0659,medium,2026-04-06T19:33:01Z,Multiple Failed Logons From Workstation,questionable,,noise,Synthetic alert noise; participant must triage against raw telemetry.
-a1ee0ead-527f-53b8-a5d8-78c40e36c29d,medium,2026-04-06T22:50:14Z,Large File Transfer To Approved Partner,benign,,noise,Synthetic alert noise; participant must triage against raw telemetry.
-4833ff1b-f464-5005-aeb6-3de09ba56a41,medium,2026-04-06T23:40:52Z,Unsigned Process From User Profile,benign,,noise,Synthetic alert noise; participant must triage against raw telemetry.
-c227f550-c1af-5f03-8f71-94a05d4ddbf5,medium,2026-04-07T03:35:23Z,Administrative PowerShell On Server,benign,,noise,Synthetic alert noise; participant must triage against raw telemetry.
-2605cf10-80c6-5c90-937c-901f6b21b241,medium,2026-04-07T05:29:05Z,Administrative PowerShell On Server,benign,,noise,Synthetic alert noise; participant must triage against raw telemetry.
-94bb9d6a-5e73-5676-bbd2-4097ebcff24c,medium,2026-04-07T06:18:21Z,Privileged Group Membership Change,questionable,,noise,Synthetic alert noise; participant must triage against raw telemetry.
-c8de45b9-3880-5e39-9928-d8a620694d50,medium,2026-04-07T07:05:06Z,Remote Administration Tool Usage,benign,,noise,Synthetic alert noise; participant must triage against raw telemetry.
-215673c4-d83c-514a-8cf8-13eb43458a4f,medium,2026-04-07T07:27:13Z,Cross-Region WMI Administrative Pivot,malicious,MED-LATERAL-001,campaign,"Corroborate with firewall, Windows logon, and remote process"
-1b06bb20-172b-5783-8596-4509c4610bba,medium,2026-04-07T08:04:49Z,GitLab Repository Archive From Compromised Engineering Host,malicious,MED-CLOUD-001,campaign,Valid token; application audit plus Zeek
-1bcba2eb-1956-5eea-892f-a82e80f8eff0,medium,2026-04-07T08:38:14Z,Cloud Role Used From On-Prem Engineering Host,malicious,MED-CLOUD-002,campaign,Requires context linking source IP to compromised DE host
-c27c33bd-ea7c-5878-88c2-4f39ed876f8e,medium,2026-04-07T11:26:08Z,Cloud Console Login From New ASN,questionable,,noise,Synthetic alert noise; participant must triage against raw telemetry.
-1e7fb542-5558-5cb3-b9d6-6c1b1a5a41a7,medium,2026-04-07T13:12:25Z,Firewall Deny Burst,benign,,noise,Synthetic alert noise; participant must triage against raw telemetry.
-f3178144-0451-57fc-bb89-611112b50971,medium,2026-04-07T16:56:40Z,Vulnerability Scanner Fan-Out,benign,,noise,Synthetic alert noise; participant must triage against raw telemetry.
-f584047d-4e02-538f-93c2-3e54a81c9831,medium,2026-04-07T17:32:32Z,SSH Login From Management Segment,questionable,,noise,Synthetic alert noise; participant must triage against raw telemetry.
-9abbf711-279d-5590-ac46-643664d65843,medium,2026-04-07T20:16:39Z,MFA Retry Pattern,benign,,noise,Synthetic alert noise; participant must triage against raw telemetry.
-20230578-67b8-5bd8-a7d5-830876c164e9,medium,2026-04-07T21:58:38Z,Cloud Console Login From New ASN,benign,,noise,Synthetic alert noise; participant must triage against raw telemetry.
-2d04d365-5041-50ac-a1df-2d976ee0ff81,medium,2026-04-08T03:20:22Z,Large File Transfer To Approved Partner,benign,,noise,Synthetic alert noise; participant must triage against raw telemetry.
-c1addbfc-1991-5a17-ae39-033a84ee54ce,medium,2026-04-08T03:49:05Z,Rare User Agent To SaaS Service,benign,,noise,Synthetic alert noise; participant must triage against raw telemetry.
-e67a94fb-3f32-569a-8a01-07813c8cff54,medium,2026-04-08T04:22:11Z,Remote Administration Tool Usage,benign,,noise,Synthetic alert noise; participant must triage against raw telemetry.
-0b98f2d2-66b0-5d79-a224-0d8c3c5eb739,medium,2026-04-08T05:51:17Z,SSH Login From Management Segment,benign,,noise,Synthetic alert noise; participant must triage against raw telemetry.
-b879a05c-220d-5029-bc34-f034dcf7558b,medium,2026-04-08T05:57:56Z,High Volume SMB Read,benign,,noise,Synthetic alert noise; participant must triage against raw telemetry.
-b0dad5e4-8a34-5c6f-9647-7dda8cbc3ca9,medium,2026-04-08T06:45:22Z,Engineering Collection Archive Staging,malicious,MED-STAGE-001,campaign,Archive staging prior to cross-region transfer
-873a6eaa-0c5e-5eca-bd0a-8e62b05aece1,medium,2026-04-08T07:23:53Z,New Service Installation,benign,,noise,Synthetic alert noise; participant must triage against raw telemetry.
-8fbd94e5-c872-5eec-a719-978ed41e249b,medium,2026-04-08T08:51:03Z,Rare DNS Query From User Segment,questionable,,noise,Synthetic alert noise; participant must triage against raw telemetry.
-bb402856-602f-5510-a120-9403267487e5,medium,2026-04-08T08:52:29Z,Privileged Group Membership Change,benign,,noise,Synthetic alert noise; participant must triage against raw telemetry.
-9ae747d0-4eb7-5725-b549-8f397a7e9376,medium,2026-04-08T09:26:08Z,High Volume SMB Read,benign,,noise,Synthetic alert noise; participant must triage against raw telemetry.
-bbbf5010-febf-5e99-abe2-8081f6455c70,medium,2026-04-08T11:32:52Z,DLP Policy Match With User Justification,benign,,noise,Synthetic alert noise; participant must triage against raw telemetry.
-9a10103f-2d38-56ed-89c2-c958b58b7848,medium,2026-04-08T12:17:05Z,Administrative PowerShell On Server,benign,,noise,Synthetic alert noise; participant must triage against raw telemetry.
-88fa29ef-5b82-5595-a6f9-9a368eb27ebd,medium,2026-04-08T13:19:07Z,Multi-Region Valid Account Reuse,malicious,MED-LATERAL-002,campaign,Same account/source appears in UK and Australia
-05385586-6aa6-5917-9d9f-d9f2260de0e2,medium,2026-04-08T21:07:54Z,Vulnerability Scanner Fan-Out,benign,,noise,Synthetic alert noise; participant must triage against raw telemetry.
-9c9bd2fb-2a93-53ab-bfec-a33d232f3784,medium,2026-04-08T23:45:16Z,Endpoint Malware Heuristic,benign,,noise,Synthetic alert noise; participant must triage against raw telemetry.
-63f4cf04-ca06-58bf-954c-302055eb2e30,medium,2026-04-09T01:10:59Z,MFA Retry Pattern,benign,,noise,Synthetic alert noise; participant must triage against raw telemetry.
-09a78d33-5994-565b-b857-d26df36d1439,medium,2026-04-09T03:31:38Z,Large File Transfer To Approved Partner,questionable,,noise,Synthetic alert noise; participant must triage against raw telemetry.
-d9242c42-1e3e-5e59-a13c-ec9284c8784f,medium,2026-04-09T04:59:15Z,Multiple Failed Logons From Workstation,benign,,noise,Synthetic alert noise; participant must triage against raw telemetry.
-dd409e2e-914f-5454-b306-d9dad11cb223,medium,2026-04-09T05:32:18Z,Staged Archive Outbound Over HTTPS,malicious,MED-EXFIL-001,campaign,Final high-confidence exfil finding
-a9578d85-7805-50e2-b69c-34568c84c5ff,medium,2026-04-09T05:50:56Z,Unusual Scheduled Task,benign,,noise,Synthetic alert noise; participant must triage against raw telemetry.
-7b4e24c8-b6f4-558d-8fbe-5f27441ab20d,medium,2026-04-09T11:05:24Z,Remote Administration Tool Usage,benign,,noise,Synthetic alert noise; participant must triage against raw telemetry.
-ae671cba-1e1c-5ea5-a9f6-8f859e5c1be4,medium,2026-04-09T12:03:14Z,Rare User Agent To SaaS Service,benign,,noise,Synthetic alert noise; participant must triage against raw telemetry.
-038e3ad5-4e88-5d3b-8cf6-41c6a1e07bd6,medium,2026-04-09T15:00:58Z,Rare DNS Query From User Segment,benign,,noise,Synthetic alert noise; participant must triage against raw telemetry.
-d2dd0bfc-1d50-5d8d-b2f0-42e807f07bf8,medium,2026-04-09T17:37:38Z,Endpoint Malware Heuristic,benign,,noise,Synthetic alert noise; participant must triage against raw telemetry.
-c696531d-ec4e-5bd1-851d-98a14df7ed5f,medium,2026-04-09T18:06:51Z,High Volume SMB Read,questionable,,noise,Synthetic alert noise; participant must triage against raw telemetry.
-ca6265cc-5607-5ef0-a06f-2d23288a6ea3,medium,2026-04-09T20:27:27Z,Administrative PowerShell On Server,benign,,noise,Synthetic alert noise; participant must triage against raw telemetry.
-3e23d590-f98a-5510-8fb0-0e016b95d524,medium,2026-04-10T00:31:29Z,Large File Transfer To Approved Partner,benign,,noise,Synthetic alert noise; participant must triage against raw telemetry.
-db95fb7b-e9f9-51a5-b4e8-55f1b8405a15,medium,2026-04-10T00:34:11Z,Cloud Console Login From New ASN,questionable,,noise,Synthetic alert noise; participant must triage against raw telemetry.
-cb3a5493-c323-587a-998e-0fe64bfc023a,medium,2026-04-10T02:08:06Z,Multiple Failed Logons From Workstation,benign,,noise,Synthetic alert noise; participant must triage against raw telemetry.
-2ca5cdd4-5195-5b12-bfd8-2e3d8d9f3457,medium,2026-04-10T04:31:55Z,Vulnerability Scanner Fan-Out,questionable,,noise,Synthetic alert noise; participant must triage against raw telemetry.
-1ac1aee8-1cab-546e-a520-0769ccb6677c,medium,2026-04-10T07:49:46Z,New Service Installation,benign,,noise,Synthetic alert noise; participant must triage against raw telemetry.
-c1707f2b-6a69-5a60-92e2-fdf31c45ceaf,medium,2026-04-10T08:08:11Z,Unusual Scheduled Task,benign,,noise,Synthetic alert noise; participant must triage against raw telemetry.
-4f54ca54-818d-5bf2-b3b2-0acc48a9872e,medium,2026-04-10T09:52:04Z,New OAuth Application Consent,questionable,,noise,Synthetic alert noise; participant must triage against raw telemetry.
-344cc88d-99ad-5c68-818f-78c71df103fc,medium,2026-04-10T10:12:19Z,Privileged Group Membership Change,questionable,,noise,Synthetic alert noise; participant must triage against raw telemetry.
-395a00cd-fb56-5026-945b-d31e4ea70f25,medium,2026-04-10T15:04:56Z,Large File Transfer To Approved Partner,benign,,noise,Synthetic alert noise; participant must triage against raw telemetry.
-c33d43bc-0133-5afe-ae30-e594bdcb5c50,medium,2026-04-10T17:25:22Z,Rare DNS Query From User Segment,benign,,noise,Synthetic alert noise; participant must triage against raw telemetry.
-8be6b7e6-b410-5e8f-92ef-0d20a765b2fb,medium,2026-04-10T17:31:51Z,Service Account Interactive Logon,questionable,,noise,Synthetic alert noise; participant must triage against raw telemetry.
-4e1623f2-4324-5349-a8df-12ba53c2c495,medium,2026-04-10T19:37:48Z,Vulnerability Scanner Fan-Out,benign,,noise,Synthetic alert noise; participant must triage against raw telemetry.
-ae551fba-f314-5b6f-ac92-b63c3d068146,medium,2026-04-10T20:36:19Z,Unsigned Process From User Profile,benign,,noise,Synthetic alert noise; participant must triage against raw telemetry.
-849f585c-9ac4-5bdc-9e08-8b79c7a88454,medium,2026-04-10T21:17:33Z,High Volume SMB Read,questionable,,noise,Synthetic alert noise; participant must triage against raw telemetry.
-b998c75b-80cd-5786-a3bc-877e4d8e80bf,medium,2026-04-10T23:12:43Z,New Service Installation,benign,,noise,Synthetic alert noise; participant must triage against raw telemetry.
+event_id,scenario,time,rule_name,expected_disposition,activity_id,kind,entity,entity_type,risk_score,severity,security_domain,source_count,notes
+8f86e985-ff27-5647-91e6-50a221ab5190,medium,2026-04-06T00:35:32Z,Privileged Group Membership Change,benign,,noise,user427,user,70,high,access,3,Alert noise; participant must triage against raw telemetry.
+038e3ad5-4e88-5d3b-8cf6-41c6a1e07bd6,medium,2026-04-06T03:17:21Z,DLP Policy Match With User Justification,benign,,noise,USNO-SRV-09,system,50,medium,threat,3,Alert noise; participant must triage against raw telemetry.
+2d04d365-5041-50ac-a1df-2d976ee0ff81,medium,2026-04-06T04:30:00Z,Firewall Deny Burst,benign,,noise,10.41.40.156,network_artifacts,25,low,network,1,Alert noise; participant must triage against raw telemetry.
+10e1c527-82ba-5015-a74b-36ae2f2c0659,medium,2026-04-06T05:52:16Z,Unsigned Process From User Profile,questionable,,noise,DEFR-SRV-05,system,50,medium,endpoint,4,Alert noise; participant must triage against raw telemetry.
+a9578d85-7805-50e2-b69c-34568c84c5ff,medium,2026-04-06T06:17:27Z,New Service Installation,benign,,noise,USHQ-SRV-23,system,50,medium,endpoint,2,Alert noise; participant must triage against raw telemetry.
+9ae747d0-4eb7-5725-b549-8f397a7e9376,medium,2026-04-06T17:52:23Z,Endpoint Malware Heuristic,benign,,noise,AUSY-SRV-04,system,70,high,endpoint,3,Alert noise; participant must triage against raw telemetry.
+6d319722-4bf2-5449-8921-2448f9adc168,medium,2026-04-06T18:13:04Z,Suspicious VPN Failure-to-Success Sequence,malicious,MED-ACCESS-001,campaign,UKLO-RADIUS-01,system,50,medium,access,5,Useful access pivot; does not prove downstream compromise alone
+71f23159-480d-5efb-b28c-cdabdb00e955,medium,2026-04-06T19:03:31Z,Native LSASS Memory Access Corroborated,malicious,MED-CRED-001,campaign,UKLO-JMP-01,system,70,high,endpoint,4,Native tooling; Defender also observes related behavior
+3a39a960-c642-5ae2-b8eb-8bbe98d65a19,medium,2026-04-06T19:06:15Z,Rare DNS Query From User Segment,questionable,,noise,10.42.40.143,network_artifacts,25,low,network,2,Alert noise; participant must triage against raw telemetry.
+e67a94fb-3f32-569a-8a01-07813c8cff54,medium,2026-04-06T19:22:38Z,Privileged Group Membership Change,benign,,noise,user147,user,70,high,access,2,Alert noise; participant must triage against raw telemetry.
+63f4cf04-ca06-58bf-954c-302055eb2e30,medium,2026-04-06T19:25:26Z,DLP Policy Match With User Justification,benign,,noise,USCA-SRV-08,system,50,medium,threat,5,Alert noise; participant must triage against raw telemetry.
+c696531d-ec4e-5bd1-851d-98a14df7ed5f,medium,2026-04-06T19:35:48Z,MFA Retry Pattern,questionable,,noise,user172,user,25,low,access,5,Alert noise; participant must triage against raw telemetry.
+ae551fba-f314-5b6f-ac92-b63c3d068146,medium,2026-04-06T20:44:53Z,New Service Installation,benign,,noise,USNO-SRV-12,system,50,medium,endpoint,5,Alert noise; participant must triage against raw telemetry.
+bbbf5010-febf-5e99-abe2-8081f6455c70,medium,2026-04-06T20:45:13Z,Rare User Agent To SaaS Service,benign,,noise,10.55.40.22,network_artifacts,25,low,network,5,Alert noise; participant must triage against raw telemetry.
+8be6b7e6-b410-5e8f-92ef-0d20a765b2fb,medium,2026-04-06T21:24:24Z,MFA Retry Pattern,questionable,,noise,user136,user,25,low,access,2,Alert noise; participant must triage against raw telemetry.
+88b20700-25f3-5730-ba9d-07777a46a136,medium,2026-04-07T00:38:03Z,Endpoint Malware Heuristic,benign,,noise,NLAM-SRV-21,system,70,high,endpoint,5,Alert noise; participant must triage against raw telemetry.
+b879a05c-220d-5029-bc34-f034dcf7558b,medium,2026-04-07T03:45:37Z,Rare DNS Query From User Segment,benign,,noise,10.55.40.202,network_artifacts,25,low,network,5,Alert noise; participant must triage against raw telemetry.
+0b98f2d2-66b0-5d79-a224-0d8c3c5eb739,medium,2026-04-07T04:31:52Z,DLP Policy Match With User Justification,benign,,noise,DEFR-SRV-07,system,50,medium,threat,3,Alert noise; participant must triage against raw telemetry.
+215673c4-d83c-514a-8cf8-13eb43458a4f,medium,2026-04-07T07:27:13Z,Cross-Region WMI Administrative Pivot,malicious,MED-LATERAL-001,campaign,10.52.50.21,network_artifacts,70,high,network,7,"Corroborate with firewall, Windows logon, and remote process"
+1b06bb20-172b-5783-8596-4509c4610bba,medium,2026-04-07T08:04:49Z,GitLab Repository Archive From Compromised Engineering Host,malicious,MED-CLOUD-001,campaign,10.100.20.15,system,50,medium,threat,3,Valid token; application audit plus Zeek
+1bcba2eb-1956-5eea-892f-a82e80f8eff0,medium,2026-04-07T08:38:14Z,Cloud Role Used From On-Prem Engineering Host,malicious,MED-CLOUD-002,campaign,AWS-CT-ENGDATA,system,50,medium,threat,6,Requires context linking source IP to compromised DE host
+ae671cba-1e1c-5ea5-a9f6-8f859e5c1be4,medium,2026-04-07T09:22:51Z,Unusual Scheduled Task,benign,,noise,USHQ-SRV-14,system,50,medium,endpoint,5,Alert noise; participant must triage against raw telemetry.
+7b4e24c8-b6f4-558d-8fbe-5f27441ab20d,medium,2026-04-07T09:42:42Z,Administrative PowerShell On Server,benign,,noise,USVA-SRV-20,system,25,low,endpoint,4,Alert noise; participant must triage against raw telemetry.
+94bb9d6a-5e73-5676-bbd2-4097ebcff24c,medium,2026-04-07T12:06:03Z,DLP Policy Match With User Justification,questionable,,noise,USCP-SRV-08,system,50,medium,threat,3,Alert noise; participant must triage against raw telemetry.
+873a6eaa-0c5e-5eca-bd0a-8e62b05aece1,medium,2026-04-07T12:31:18Z,New Service Installation,benign,,noise,NLAM-SRV-24,system,50,medium,endpoint,3,Alert noise; participant must triage against raw telemetry.
+bf3fecf1-efc5-5aab-a274-647b6518fe1d,medium,2026-04-07T13:46:39Z,Administrative PowerShell On Server,benign,,noise,AUSY-SRV-23,system,25,low,endpoint,5,Alert noise; participant must triage against raw telemetry.
+1ac1aee8-1cab-546e-a520-0769ccb6677c,medium,2026-04-07T16:26:35Z,Firewall Deny Burst,benign,,noise,10.56.40.206,network_artifacts,25,low,network,2,Alert noise; participant must triage against raw telemetry.
+2ca5cdd4-5195-5b12-bfd8-2e3d8d9f3457,medium,2026-04-07T18:59:24Z,Remote Administration Tool Usage,questionable,,noise,UKLO-SRV-10,system,50,medium,endpoint,1,Alert noise; participant must triage against raw telemetry.
+a1ee0ead-527f-53b8-a5d8-78c40e36c29d,medium,2026-04-08T00:03:54Z,Unsigned Process From User Profile,benign,,noise,USVA-SRV-10,system,50,medium,endpoint,3,Alert noise; participant must triage against raw telemetry.
+1e7fb542-5558-5cb3-b9d6-6c1b1a5a41a7,medium,2026-04-08T03:50:11Z,SSH Login From Management Segment,benign,,noise,user515,user,25,low,access,1,Alert noise; participant must triage against raw telemetry.
+2a6044dd-0e42-5c5f-8d4f-15e7a352b2e4,medium,2026-04-08T04:55:20Z,New OAuth Application Consent,questionable,,noise,user444,user,50,medium,access,5,Alert noise; participant must triage against raw telemetry.
+b0dad5e4-8a34-5c6f-9647-7dda8cbc3ca9,medium,2026-04-08T06:45:22Z,Engineering Collection Archive Staging,malicious,MED-STAGE-001,campaign,DEFR-ENG-APP-03,system,50,medium,endpoint,3,Archive staging prior to cross-region transfer
+8fbd94e5-c872-5eec-a719-978ed41e249b,medium,2026-04-08T11:58:52Z,Unusual Scheduled Task,questionable,,noise,USOH-SRV-10,system,50,medium,endpoint,4,Alert noise; participant must triage against raw telemetry.
+24b88c08-2c90-55c2-ac13-dc05b9ad7a12,medium,2026-04-08T13:07:11Z,Rare User Agent To SaaS Service,benign,,noise,10.42.40.129,network_artifacts,25,low,network,4,Alert noise; participant must triage against raw telemetry.
+88fa29ef-5b82-5595-a6f9-9a368eb27ebd,medium,2026-04-08T13:19:07Z,Multi-Region Valid Account Reuse,malicious,MED-LATERAL-002,campaign,AUSY-RADIUS-01,system,50,medium,access,2,Same account/source appears in UK and Australia
+3e23d590-f98a-5510-8fb0-0e016b95d524,medium,2026-04-08T18:19:29Z,Service Account Interactive Logon,benign,,noise,user282,user,70,high,access,2,Alert noise; participant must triage against raw telemetry.
+fc86c00e-ad74-5b56-b319-65a43f5d177d,medium,2026-04-08T20:39:02Z,High Volume SMB Read,benign,,noise,10.45.40.128,network_artifacts,50,medium,network,1,Alert noise; participant must triage against raw telemetry.
+9c9bd2fb-2a93-53ab-bfec-a33d232f3784,medium,2026-04-08T21:07:54Z,Vulnerability Scanner Fan-Out,benign,,noise,10.59.40.29,network_artifacts,10,informational,network,2,Alert noise; participant must triage against raw telemetry.
+ca6265cc-5607-5ef0-a06f-2d23288a6ea3,medium,2026-04-08T21:32:38Z,New OAuth Application Consent,benign,,noise,user386,user,50,medium,access,4,Alert noise; participant must triage against raw telemetry.
+d2dd0bfc-1d50-5d8d-b2f0-42e807f07bf8,medium,2026-04-08T23:45:16Z,Endpoint Malware Heuristic,benign,,noise,NLAM-SRV-10,system,70,high,endpoint,4,Alert noise; participant must triage against raw telemetry.
+344cc88d-99ad-5c68-818f-78c71df103fc,medium,2026-04-09T01:10:59Z,MFA Retry Pattern,questionable,,noise,user910,user,25,low,access,3,Alert noise; participant must triage against raw telemetry.
+4e1623f2-4324-5349-a8df-12ba53c2c495,medium,2026-04-09T01:52:22Z,New OAuth Application Consent,benign,,noise,user824,user,50,medium,access,4,Alert noise; participant must triage against raw telemetry.
+6e8def9c-bef7-58a2-8409-9f4219546bc6,medium,2026-04-09T04:06:30Z,Service Account Interactive Logon,benign,,noise,user231,user,70,high,access,2,Alert noise; participant must triage against raw telemetry.
+395a00cd-fb56-5026-945b-d31e4ea70f25,medium,2026-04-09T04:59:15Z,Multiple Failed Logons From Workstation,benign,,noise,user933,user,50,medium,access,3,Alert noise; participant must triage against raw telemetry.
+dd409e2e-914f-5454-b306-d9dad11cb223,medium,2026-04-09T05:32:18Z,Staged Archive Outbound Over HTTPS,malicious,MED-EXFIL-001,campaign,34.240.118.91,system,50,medium,endpoint,4,Final high-confidence exfil finding
+9a10103f-2d38-56ed-89c2-c958b58b7848,medium,2026-04-09T05:38:11Z,Rare DNS Query From User Segment,benign,,noise,10.55.40.20,network_artifacts,25,low,network,3,Alert noise; participant must triage against raw telemetry.
+bb402856-602f-5510-a120-9403267487e5,medium,2026-04-09T06:32:08Z,Multiple Failed Logons From Workstation,benign,,noise,user117,user,50,medium,access,4,Alert noise; participant must triage against raw telemetry.
+2605cf10-80c6-5c90-937c-901f6b21b241,medium,2026-04-09T07:48:47Z,Multiple Failed Logons From Workstation,benign,,noise,user682,user,50,medium,access,2,Alert noise; participant must triage against raw telemetry.
+b998c75b-80cd-5786-a3bc-877e4d8e80bf,medium,2026-04-09T09:17:57Z,Endpoint Malware Heuristic,benign,,noise,UKLO-SRV-03,system,70,high,endpoint,3,Alert noise; participant must triage against raw telemetry.
+db95fb7b-e9f9-51a5-b4e8-55f1b8405a15,medium,2026-04-09T09:18:52Z,Large File Transfer To Approved Partner,questionable,,noise,10.41.40.23,network_artifacts,50,medium,network,1,Alert noise; participant must triage against raw telemetry.
+4833ff1b-f464-5005-aeb6-3de09ba56a41,medium,2026-04-09T12:03:14Z,Rare User Agent To SaaS Service,benign,,noise,10.45.40.213,network_artifacts,25,low,network,2,Alert noise; participant must triage against raw telemetry.
+79920afa-68bc-5fb0-96c1-db3b5eaba743,medium,2026-04-09T14:58:04Z,Administrative PowerShell On Server,benign,,noise,USTX-SRV-24,system,25,low,endpoint,5,Alert noise; participant must triage against raw telemetry.
+849f585c-9ac4-5bdc-9e08-8b79c7a88454,medium,2026-04-09T16:59:12Z,New OAuth Application Consent,questionable,,noise,user156,user,50,medium,access,3,Alert noise; participant must triage against raw telemetry.
+c27c33bd-ea7c-5878-88c2-4f39ed876f8e,medium,2026-04-09T17:17:45Z,Rare DNS Query From User Segment,questionable,,noise,10.55.40.211,network_artifacts,25,low,network,1,Alert noise; participant must triage against raw telemetry.
+c8de45b9-3880-5e39-9928-d8a620694d50,medium,2026-04-09T19:56:58Z,Unsigned Process From User Profile,benign,,noise,UKLO-SRV-06,system,50,medium,endpoint,2,Alert noise; participant must triage against raw telemetry.
+f584047d-4e02-538f-93c2-3e54a81c9831,medium,2026-04-09T23:30:17Z,SSH Login From Management Segment,questionable,,noise,user776,user,25,low,access,5,Alert noise; participant must triage against raw telemetry.
+c1addbfc-1991-5a17-ae39-033a84ee54ce,medium,2026-04-09T23:45:07Z,Service Account Interactive Logon,benign,,noise,user565,user,70,high,access,2,Alert noise; participant must triage against raw telemetry.
+c33d43bc-0133-5afe-ae30-e594bdcb5c50,medium,2026-04-10T01:45:12Z,Unusual Scheduled Task,benign,,noise,USCA-SRV-12,system,50,medium,endpoint,5,Alert noise; participant must triage against raw telemetry.
+05385586-6aa6-5917-9d9f-d9f2260de0e2,medium,2026-04-10T04:51:07Z,SSH Login From Management Segment,benign,,noise,user567,user,25,low,access,2,Alert noise; participant must triage against raw telemetry.
+cb3a5493-c323-587a-998e-0fe64bfc023a,medium,2026-04-10T07:47:07Z,Endpoint Malware Heuristic,benign,,noise,USOH-SRV-13,system,70,high,endpoint,2,Alert noise; participant must triage against raw telemetry.
+09a78d33-5994-565b-b857-d26df36d1439,medium,2026-04-10T08:14:19Z,Privileged Group Membership Change,questionable,,noise,user219,user,70,high,access,4,Alert noise; participant must triage against raw telemetry.
+4f54ca54-818d-5bf2-b3b2-0acc48a9872e,medium,2026-04-10T09:18:43Z,Remote Administration Tool Usage,questionable,,noise,AUSY-SRV-05,system,50,medium,endpoint,5,Alert noise; participant must triage against raw telemetry.
+d9242c42-1e3e-5e59-a13c-ec9284c8784f,medium,2026-04-10T10:17:27Z,Endpoint Malware Heuristic,benign,,noise,CATO-SRV-09,system,70,high,endpoint,5,Alert noise; participant must triage against raw telemetry.
+f3178144-0451-57fc-bb89-611112b50971,medium,2026-04-10T14:11:09Z,Unusual Scheduled Task,benign,,noise,NLAM-SRV-15,system,50,medium,endpoint,2,Alert noise; participant must triage against raw telemetry.
+20230578-67b8-5bd8-a7d5-830876c164e9,medium,2026-04-10T16:47:02Z,DLP Policy Match With User Justification,benign,,noise,USHQ-SRV-19,system,50,medium,threat,3,Alert noise; participant must triage against raw telemetry.
+c1707f2b-6a69-5a60-92e2-fdf31c45ceaf,medium,2026-04-10T16:53:35Z,High Volume SMB Read,benign,,noise,10.42.40.40,network_artifacts,50,medium,network,2,Alert noise; participant must triage against raw telemetry.
+9abbf711-279d-5590-ac46-643664d65843,medium,2026-04-10T19:37:48Z,Vulnerability Scanner Fan-Out,benign,,noise,10.59.40.55,network_artifacts,10,informational,network,1,Alert noise; participant must triage against raw telemetry.
+c227f550-c1af-5f03-8f71-94a05d4ddbf5,medium,2026-04-10T22:23:02Z,Service Account Interactive Logon,benign,,noise,user478,user,70,high,access,2,Alert noise; participant must triage against raw telemetry.

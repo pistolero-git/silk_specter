@@ -333,3 +333,61 @@ regenerate track
 ```
 
 The static campaign remains fixed unless you intentionally modify `scenario_data/<track>/attack_events.jsonl`. If static answer-bearing evidence changes, revalidate the affected questions, answers, hints, detections, and instructor ground truth before using the track.
+
+## 8. Validate ES finding/notable field parsing
+
+SILK SPECTER notables use the native `stash`/modaction record shape used by Splunk ES: an epoch prefix followed by comma-separated `key="value"` fields. The feed includes finding title/description, entity, entity type, risk/finding score, severity, urgency, status, security domain, source counts, stable detection IDs, annotations, and drilldown searches.
+
+After loading a track, verify that the fields are actually extracted:
+
+```spl
+index=notable host=SILK-SPECTER-ES source=notable sourcetype=stash scenario=easy
+| table _time rule_name rule_description entity entity_type risk_score finding_score severity urgency status_label security_domain src dest user source_count drilldown_search
+```
+
+This health check should return **zero** events:
+
+```spl
+index=notable host=SILK-SPECTER-ES source=notable sourcetype=stash
+| where isnull(rule_name) OR isnull(rule_description) OR isnull(entity) OR isnull(entity_type) OR isnull(risk_score) OR isnull(severity)
+| stats count
+```
+
+### Rebuild only the notable feeds
+
+If the main track data is already correct in Splunk, you do not need to regenerate the full corpus just to rebuild findings:
+
+```bash
+python3 generator/notables.py --scenario easy
+python3 generator/notables.py --scenario medium
+python3 generator/notables.py --scenario hard
+```
+
+### Remove an older malformed SILK SPECTER notable feed before reloading
+
+Older SILK SPECTER builds used a simplified space-delimited record. Do not load the corrected feed on top of those events or the Analyst Queue can contain duplicates.
+
+First confirm the scope:
+
+```spl
+index=notable host=SILK-SPECTER-ES source=notable sourcetype=stash
+| rex field=_raw "scenario=\"(?<silk_scenario>[^\"]+)\""
+| stats count by silk_scenario
+```
+
+If the results contain only the old SILK SPECTER events you intend to replace, an administrator with the `can_delete` capability can hide the old Easy events from search with:
+
+```spl
+index=notable host=SILK-SPECTER-ES source=notable sourcetype=stash
+| rex field=_raw "scenario=\"(?<silk_scenario>[^\"]+)\""
+| search silk_scenario=easy
+| delete
+```
+
+Then reload the corrected feed:
+
+```bash
+./scripts/load_notables.sh easy asteron_easy_v001 notable
+```
+
+`delete` does not reclaim bucket disk space; it marks matching events as deleted from search results. Never run a broad delete against the shared ES `notable` index.
