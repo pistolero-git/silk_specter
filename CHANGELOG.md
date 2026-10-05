@@ -2,6 +2,17 @@
 
 ## Unreleased
 
+### Finding entity and truth alignment
+
+- Aligned synthetic findings with the direct Enterprise Security finding shape represented by the supplied `notables.csv` sample.
+- Set `entity=risk_object` and `entity_type=risk_object_type` for every finding while retaining `risk_score` as the direct finding score.
+- Added direct-finding metadata such as `detection_type=ebd`, `count=1`, `orig_action_name=notable`, `orig_investigation_type=default`, `risk_message`, and `contributing_events_search`.
+- Enforced that every notable is backed by exactly one event that is actually present in `dataset/<track>/hec/events.jsonl`.
+- Enforced `True Positive` -> authored `truth_label=malicious`.
+- Enforced `Benign Positive` -> authored `truth_label=benign` or generated non-malicious background event.
+- Removed the former `questionable` disposition from synthetic notable noise; generated noise findings are `Benign Positive`.
+- Kept truth/disposition labels instructor-only so participant notable data does not reveal the answer.
+
 ### ES finding/notable fidelity
 
 - Changed synthetic findings to the native comma-delimited `stash`/modaction record shape used by Splunk ES instead of simplified space-delimited key/value text.
@@ -47,11 +58,11 @@
 
 - Reworked all Easy/Medium/Hard synthetic notables as direct **non-RBA** notable events.
 - Every notable is backed by exactly one event already present in the generated participant dataset.
-- Removed RBA aggregation fields (`risk_object*`, `risk_score`, `risk_event_count`, `all_risk_objects`, `normalized_risk_object`) and intermediate-finding semantics.
-- Campaign notables use one authored APT event; benign/questionable alert noise uses one deterministic generated background event.
+- Retained direct-finding `risk_object`, `risk_object_type`, and `risk_score` so the ES finding entity is represented correctly, while omitting RBA aggregation/threshold fields (`risk_event_count`, `all_risk_objects`, `normalized_risk_object`, `risk_threshold`, `risk_object_system`).
+- Campaign notables use one authored APT event; Benign Positive alert noise uses one deterministic generated non-malicious background event.
 - `source_count=1` for every notable and drilldowns point to the single backing source event.
 - Added deterministic synthetic ES-style notable feeds under `dataset/<track>/notables/`.
-- Added expected campaign findings plus benign/questionable notable noise.
+- Added expected campaign findings plus Benign Positive notable noise.
 - Noise scales with difficulty: Easy 25, Medium 60, Hard 120 noise events.
 - Added `scripts/load_notables.sh` with track-index drilldown substitution.
 - Added instructor-only notable ground truth without leaking disposition into participant events.
@@ -85,5 +96,5 @@
 
 - Added `risk_score` to every synthetic finding/notable, set equal to the direct finding score.
 - Retained required `entity` and `entity_type` on every finding.
-- This remains a non-RBA, one-source-event-per-notable model; no `risk_object`, `risk_event_count`, or intermediate findings are emitted.
+- This remains a non-RBA, one-source-event-per-notable model. `risk_object`/`risk_object_type` are direct finding-entity fields; no `risk_event_count`, threshold aggregation, or intermediate findings are emitted.
 

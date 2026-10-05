@@ -3,11 +3,18 @@
   "events": 36,
   "campaign_notables": 11,
   "noise_notables": 25,
+  "true_positive_notables": 8,
+  "benign_positive_notables": 28,
   "sourcetype": "stash",
   "source": "per-event search_name",
-  "stash_schema": "es8-direct-notable-kv-v3",
-  "notable_model": "non-rba-direct-event",
+  "stash_schema": "es8-direct-notable-kv-v4",
+  "notable_model": "non-rba-direct-event-risk-object",
   "source_events_per_notable": 1,
+  "truth_contract": {
+    "True Positive": "one generated event whose authored truth_label is malicious",
+    "Benign Positive": "one generated authored benign event or generated non-malicious background event"
+  },
+  "entity_contract": "entity=risk_object and entity_type=risk_object_type",
   "canonical_ingest_file": "hec/events.jsonl",
   "participant_filter": "index=notable host=SILK-SPECTER-ES sourcetype=stash scenario=easy",
   "required_finding_fields": [
@@ -15,6 +22,8 @@
     "rule_description",
     "entity",
     "entity_type",
+    "risk_object",
+    "risk_object_type",
     "finding_score",
     "risk_score",
     "severity",
@@ -22,13 +31,14 @@
     "status_label",
     "security_domain",
     "source_event_id",
+    "contributing_events_search",
     "drilldown_search"
   ],
   "forbidden_rba_fields": [
     "all_risk_objects",
     "normalized_risk_object",
-    "risk_object",
-    "risk_object_type",
-    "risk_event_count"
+    "risk_event_count",
+    "risk_threshold",
+    "risk_object_system"
   ]
 }

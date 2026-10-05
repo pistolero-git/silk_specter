@@ -1,16 +1,21 @@
 #!/usr/bin/env python3
-"""Build deterministic non-RBA Splunk ES notable events for SILK SPECTER.
+"""Build deterministic direct Splunk ES findings for SILK SPECTER.
 
-Every synthetic notable is a direct correlation-search-style result backed by
-exactly one event that already exists in the generated APT dataset. Campaign
-notables point at authored static evidence. Benign/questionable noise notables
-point at deterministic background events from the generated participant corpus.
+Every synthetic notable is backed by exactly one event that already exists in
+``dataset/<track>/hec/events.jsonl``.
 
-No RBA aggregation fields are emitted: there are no risk objects, risk-event
-counts, or intermediate findings associated with a notable. The generated
-``_raw`` follows the native stash/modaction shape used by Enterprise Security.
-Participant data never includes instructor truth such as expected disposition,
-activity IDs, or truth labels.
+Truth alignment is strict:
+* ``True Positive`` -> the backing authored event has ``truth_label=malicious``.
+* ``Benign Positive`` -> the backing event is either authored
+  ``truth_label=benign`` evidence or generated non-malicious background noise.
+
+These are non-RBA findings. ``risk_object``/``risk_object_type`` are populated
+because the ES finding action uses them to define the finding entity, and
+``entity``/``entity_type`` are set to the exact same values. No risk-threshold
+or multi-finding aggregation fields are generated.
+
+Participant data never includes instructor truth labels or expected
+dispositions.
 """
 from __future__ import annotations
 
@@ -96,6 +101,13 @@ FINDING_SCORES = {
     "informational": 10,
     "unknown": 0,
 }
+
+DISPOSITION_BY_TRUTH = {
+    "malicious": "True Positive",
+    "benign": "Benign Positive",
+}
+
+NON_MALICIOUS_BACKGROUND = "non-malicious"
 
 # Only attach ATT&CK metadata when the title makes the mapping unambiguous.
 MITRE_TITLE_MAP = [
@@ -230,6 +242,44 @@ def source_event_id_for_generated(row: dict) -> str:
     return str(uuid.uuid5(uuid.NAMESPACE_URL, "silk-specter:generated-source:" + material))
 
 
+def static_event_signature(row: dict) -> tuple:
+    return (
+        round(parse_iso(str(row["time"])).timestamp(), 6),
+        str(row.get("host", "")),
+        str(row.get("source", "")),
+        str(row.get("sourcetype", "")),
+        str(row.get("raw", "")),
+    )
+
+
+def generated_event_signature(row: dict) -> tuple:
+    return (
+        round(float(row["time"]), 6),
+        str(row.get("host", "")),
+        str(row.get("source", "")),
+        str(row.get("sourcetype", "")),
+        str(row.get("event", "")),
+    )
+
+
+def load_generated_events(dataset_dir: Path) -> list[dict]:
+    path = dataset_dir / "hec" / "events.jsonl"
+    if not path.is_file():
+        raise FileNotFoundError(f"Missing generated participant HEC data: {path}")
+    head = path.read_text(encoding="utf-8", errors="replace")[:128]
+    if head.startswith("version https://git-lfs.github.com/spec/v1"):
+        raise RuntimeError(
+            f"Generated HEC data is an unmaterialized Git LFS pointer: {path}. "
+            "Run make generate-<track> before rebuilding notables."
+        )
+    events = []
+    with path.open(encoding="utf-8") as f:
+        for line in f:
+            if line.strip():
+                events.append(json.loads(line))
+    return events
+
+
 def event_drilldown(source_index: str, row: dict, event_time: datetime) -> str:
     earliest = int(event_time.timestamp()) - 1
     latest = int(event_time.timestamp()) + 2
@@ -346,31 +396,13 @@ def classify_background_event(row: dict) -> tuple[str, str, str] | None:
     return None
 
 
-def load_generated_background_events(dataset_dir: Path, truth: list[dict]) -> list[dict]:
-    path = dataset_dir / "hec" / "events.jsonl"
-    if not path.is_file():
-        raise FileNotFoundError(f"Missing generated participant HEC data: {path}")
-    head = path.read_text(encoding="utf-8", errors="replace")[:128]
-    if head.startswith("version https://git-lfs.github.com/spec/v1"):
-        raise RuntimeError(
-            f"Generated HEC data is an unmaterialized Git LFS pointer: {path}. "
-            "Run make generate-<track> before rebuilding notables."
-        )
-    static_signatures = {
-        (str(row.get("host", "")), str(row.get("source", "")), str(row.get("sourcetype", "")), str(row.get("raw", "")))
-        for row in truth
-    }
-    events = []
-    with path.open(encoding="utf-8") as f:
-        for line in f:
-            if not line.strip():
-                continue
-            row = json.loads(line)
-            sig = (str(row.get("host", "")), str(row.get("source", "")), str(row.get("sourcetype", "")), str(row.get("event", "")))
-            if sig in static_signatures:
-                continue
-            events.append(row)
-    return events
+def load_generated_background_events(generated_events: list[dict], truth: list[dict]) -> list[dict]:
+    """Return generated events that are not authored campaign/static rows."""
+    static_signatures = {static_event_signature(row) for row in truth}
+    return [
+        row for row in generated_events
+        if generated_event_signature(row) not in static_signatures
+    ]
 
 
 def select_noise_events(events: list[dict], count: int, rng: random.Random) -> list[tuple[dict, str, str, str]]:
@@ -430,20 +462,26 @@ def notable_raw(
     src: str,
     dest: str,
     user: str,
-    entity: str,
-    entity_type: str,
+    risk_object: str,
+    risk_object_type: str,
     finding_score: int,
     drilldown_search: str,
     event_time: float,
+    source_time: float,
     kind: str,
 ) -> str:
-    """Render one direct, non-RBA ES notable backed by one source event."""
+    """Render one direct ES finding backed by one generated source event."""
     epoch = int(event_time)
+    source_epoch = int(source_time)
     search_name = f"SS - {rule_name} - Rule"
     rule_id = str(uuid.uuid5(uuid.NAMESPACE_URL, f"silk-specter:rule:{scenario}:{rule_name}"))
     detection_id = str(uuid.uuid5(uuid.NAMESPACE_URL, f"silk-specter:detection:{scenario}:{rule_name}"))
     source_guid = str(uuid.uuid5(uuid.NAMESPACE_URL, f"silk-specter:source-guid:{source_event_id}"))
     annotations = attack_annotations(rule_name, kind)
+    first_last = datetime.fromtimestamp(
+        source_time,
+        tz=parse_iso("2026-01-01T00:00:00Z").tzinfo,
+    ).strftime("%Y-%m-%dT%H:%M:%S")
 
     asset_type = {
         "access": "Identity",
@@ -461,6 +499,7 @@ def notable_raw(
         ("orig_sid", event_id),
         ("rule_id", rule_id),
         ("detection_id", detection_id),
+        ("detection_type", "ebd"),
         ("rule_name", rule_name),
         ("rule_title", rule_name),
         ("orig_rule_title", rule_name),
@@ -468,6 +507,7 @@ def notable_raw(
         ("rule_description", description),
         ("orig_rule_description", description),
         ("savedsearch_description", description),
+        ("risk_message", description),
         ("urgency", urgency),
         ("severity", urgency),
         ("priority", urgency),
@@ -475,30 +515,36 @@ def notable_raw(
         ("status_label", "New"),
         ("owner", "unassigned"),
         ("security_domain", domain),
+        ("orig_security_domain", domain),
         ("app", "SA-SilkSpecter"),
         ("app_name", "SA-SilkSpecter"),
         ("product", "Splunk Enterprise Security"),
-        ("vendor_product", "Splunk Enterprise Security"),
+        ("vendor_product", "Asteron Utilities Group"),
         ("asset_type", asset_type),
         ("finding_type", "finding"),
         ("notable_type", "notable"),
-        ("entity", entity),
-        ("entity_type", entity_type),
+        # Splunk ES finding contract: entity is the risk object.
+        ("entity", risk_object),
+        ("entity_type", risk_object_type),
+        ("risk_object", risk_object),
+        ("risk_object_type", risk_object_type),
         ("finding_score", finding_score),
-        # ES finding actions expect risk_score as the numeric finding score input.
-        # This does not make the record RBA: there is still exactly one backing
-        # source event and no risk_object/risk_event_count/intermediate findings.
         ("risk_score", finding_score),
-        # A non-RBA notable is one correlation-search result, not an aggregation
-        # of intermediate findings. Keep this count at exactly one.
+        ("count", 1),
         ("source_count", 1),
         ("source_event_id", source_event_id),
         ("source_guid", source_guid),
+        ("orig_action_name", "notable"),
+        ("orig_investigation_type", "default"),
         ("orig_queue_id", "__system_default_queue__"),
         ("orig_time", epoch),
+        ("firstTime", first_last),
+        ("lastTime", first_last),
         ("info_search_time", epoch),
-        ("info_min_time", epoch - 300),
-        ("info_max_time", epoch + 300),
+        ("info_min_time", source_epoch - 300),
+        ("info_max_time", source_epoch + 300),
+        ("contributing_events_search", drilldown_search),
+        ("orig_source", search_name),
         ("orig_tag", "modaction_result"),
         ("version", "2.1"),
         ("annotations", annotations),
@@ -511,9 +557,10 @@ def notable_raw(
         ("src", src),
         ("dest", dest),
         ("user", user),
+        ("user_id", user),
         ("drilldown_name", "View source event"),
         ("drilldown_search", drilldown_search),
-        ("nes_fields", "src,dest,user,entity,entity_type,finding_score,risk_score"),
+        ("nes_fields", "src,dest,user,entity,entity_type,risk_object,risk_object_type,risk_score"),
     ]
     annotation_obj = json.loads(annotations)
     if annotation_obj.get("mitre_attack"):
@@ -557,6 +604,20 @@ def build_notables(root: Path, scenario: str, dataset_dir: Path, cfg: dict) -> d
     with findings_path.open(newline="", encoding="utf-8") as f:
         findings = list(csv.DictReader(f))
 
+    # Load the actual participant corpus once. Campaign findings are not allowed
+    # to point only at instructor/static truth; their chosen source row must also
+    # exist byte-for-byte in the generated HEC corpus that participants ingest.
+    generated_events = load_generated_events(dataset_dir)
+    generated_by_signature: dict[tuple, list[dict]] = defaultdict(list)
+    for row in generated_events:
+        generated_by_signature[generated_event_signature(row)].append(row)
+
+    malicious_static_signatures = {
+        static_event_signature(row)
+        for row in truth
+        if str(row.get("truth_label", "")).lower() == "malicious"
+    }
+
     activity_rows = defaultdict(list)
     for row in truth:
         activity_rows[row["activity_id"]].append(row)
@@ -570,26 +631,65 @@ def build_notables(root: Path, scenario: str, dataset_dir: Path, cfg: dict) -> d
     instructor_rows = []
     used_campaign_source_ids: set[str] = set()
 
-    # Direct campaign notables. Each detection result points to one authored APT
-    # event. Separate detection rules may legitimately fire on the same activity,
-    # but there is never a many-finding/RBA aggregation inside one notable.
+    expected_to_truth = {
+        "malicious": "malicious",
+        "benign": "benign",
+        "True Positive": "malicious",
+        "Benign Positive": "benign",
+    }
+
+    # Campaign findings are direct detections over one authored event that is
+    # also present in the generated participant corpus.
     for finding in findings:
         activity = finding["activity_id"]
-        rows = activity_rows[activity]
+        expected = finding["expected_disposition"]
+        if expected not in expected_to_truth:
+            raise ValueError(
+                f"Unsupported expected disposition {expected!r} for {finding['finding_id']}"
+            )
+        required_truth = expected_to_truth[expected]
+        disposition = DISPOSITION_BY_TRUTH[required_truth]
+
+        rows = [
+            row for row in activity_rows[activity]
+            if str(row.get("truth_label", "")).lower() == required_truth
+        ]
         if not rows:
-            raise ValueError(f"No authored APT events found for {activity}")
+            raise ValueError(
+                f"{finding['finding_id']} expects {disposition}, but activity {activity} "
+                f"has no authored event with truth_label={required_truth}"
+            )
+
         rule = finding["detection_name"]
         source_row = representative_event(rows, rule, used_campaign_source_ids)
-        source_dt = parse_iso(source_row["time"])
+        signature = static_event_signature(source_row)
+        generated_matches = generated_by_signature.get(signature, [])
+        if not generated_matches:
+            raise ValueError(
+                f"{finding['finding_id']} selected authored event {source_row['event_id']} "
+                "but that event is not present in the generated participant HEC corpus"
+            )
+        generated_source = generated_matches[0]
+
+        source_dt = datetime.fromtimestamp(
+            float(generated_source["time"]),
+            tz=parse_iso(cfg["start"]).tzinfo,
+        )
         dt = source_dt + timedelta(seconds=60)
         urgency = infer_urgency(rule)
         domain = infer_domain(rule)
-        src, dest, user = extract_observables([source_row])
-        entity, entity_type = choose_entity(domain, src, dest, user)
+        participant_row = {
+            "host": generated_source.get("host", ""),
+            "source": generated_source.get("source", ""),
+            "sourcetype": generated_source.get("sourcetype", ""),
+            "raw": generated_source.get("event", ""),
+        }
+        src, dest, user = extract_observables([participant_row])
+        risk_object, risk_object_type = choose_entity(domain, src, dest, user)
         finding_score = FINDING_SCORES.get(urgency, 0)
         event_id = str(uuid.uuid5(uuid.NAMESPACE_URL, f"silk-specter:notable:{scenario}:{finding['finding_id']}"))
         source_event_id = str(source_row["event_id"])
-        drill = event_drilldown(source_index, source_row, source_dt)
+        drill = event_drilldown(source_index, generated_source, source_dt)
         description = campaign_description(finding, source_index)
 
         records.append({
@@ -609,11 +709,12 @@ def build_notables(root: Path, scenario: str, dataset_dir: Path, cfg: dict) -> d
                 src=src,
                 dest=dest,
                 user=user,
-                entity=entity,
-                entity_type=entity_type,
+                risk_object=risk_object,
+                risk_object_type=risk_object_type,
                 finding_score=finding_score,
                 drilldown_search=drill,
                 event_time=dt.timestamp(),
+                source_time=source_dt.timestamp(),
                 kind="campaign",
             ),
         })
@@ -622,30 +723,40 @@ def build_notables(root: Path, scenario: str, dataset_dir: Path, cfg: dict) -> d
             "scenario": scenario,
             "time": dt.isoformat().replace("+00:00", "Z"),
             "rule_name": rule,
-            "expected_disposition": finding["expected_disposition"],
+            "expected_disposition": disposition,
+            "source_truth_label": required_truth,
             "activity_id": activity,
             "kind": "campaign",
-            "entity": entity,
-            "entity_type": entity_type,
+            "entity": risk_object,
+            "entity_type": risk_object_type,
+            "risk_object": risk_object,
+            "risk_object_type": risk_object_type,
             "finding_score": finding_score,
             "risk_score": finding_score,
             "severity": urgency,
             "security_domain": domain,
             "source_count": 1,
             "source_event_id": source_event_id,
-            "source_host": source_row.get("host", ""),
-            "source": source_row.get("source", ""),
-            "source_sourcetype": source_row.get("sourcetype", ""),
+            "source_host": generated_source.get("host", ""),
+            "source": generated_source.get("source", ""),
+            "source_sourcetype": generated_source.get("sourcetype", ""),
+            "source_generated_presence": "yes",
             "notes": finding.get("notes", ""),
         })
 
-    # Noise notables are also direct detections over real events already present
-    # in the generated participant corpus. No invented src/dest/user values and
-    # no synthetic intermediate findings are created.
-    background_events = load_generated_background_events(dataset_dir, truth)
+    # Noise findings are Benign Positives over actual generated background rows.
+    # They may not point at any authored malicious/static event.
+    background_events = load_generated_background_events(generated_events, truth)
     selected_noise = select_noise_events(background_events, noise_count, rng)
-    for i, (source_row, title, urgency, domain) in enumerate(selected_noise):
-        source_dt = datetime.fromtimestamp(float(source_row["time"]), tz=parse_iso(cfg["start"]).tzinfo)
+    for source_row, title, urgency, domain in selected_noise:
+        signature = generated_event_signature(source_row)
+        if signature in malicious_static_signatures:
+            raise ValueError("Benign Positive noise selected a malicious authored source event")
+
+        source_dt = datetime.fromtimestamp(
+            float(source_row["time"]),
+            tz=parse_iso(cfg["start"]).tzinfo,
+        )
         dt = source_dt + timedelta(seconds=60)
         participant_row = {
             "host": source_row.get("host", ""),
@@ -654,11 +765,11 @@ def build_notables(root: Path, scenario: str, dataset_dir: Path, cfg: dict) -> d
             "raw": source_row.get("event", ""),
         }
         src, dest, user = extract_observables([participant_row])
-        entity, entity_type = choose_entity(domain, src, dest, user)
+        risk_object, risk_object_type = choose_entity(domain, src, dest, user)
         finding_score = FINDING_SCORES.get(urgency, 0)
         source_event_id = source_event_id_for_generated(source_row)
         event_id = str(uuid.uuid5(uuid.NAMESPACE_URL, f"silk-specter:notable-noise:{scenario}:{source_event_id}"))
-        drill = event_drilldown(source_index, participant_row, source_dt)
+        drill = event_drilldown(source_index, source_row, source_dt)
         description = noise_description(title, src, dest, user)
 
         records.append({
@@ -678,11 +789,12 @@ def build_notables(root: Path, scenario: str, dataset_dir: Path, cfg: dict) -> d
                 src=src,
                 dest=dest,
                 user=user,
-                entity=entity,
-                entity_type=entity_type,
+                risk_object=risk_object,
+                risk_object_type=risk_object_type,
                 finding_score=finding_score,
                 drilldown_search=drill,
                 event_time=dt.timestamp(),
+                source_time=source_dt.timestamp(),
                 kind="noise",
             ),
         })
@@ -691,11 +803,14 @@ def build_notables(root: Path, scenario: str, dataset_dir: Path, cfg: dict) -> d
             "scenario": scenario,
             "time": dt.isoformat().replace("+00:00", "Z"),
             "rule_name": title,
-            "expected_disposition": "benign" if i % 4 else "questionable",
+            "expected_disposition": "Benign Positive",
+            "source_truth_label": NON_MALICIOUS_BACKGROUND,
             "activity_id": "",
             "kind": "noise",
-            "entity": entity,
-            "entity_type": entity_type,
+            "entity": risk_object,
+            "entity_type": risk_object_type,
+            "risk_object": risk_object,
+            "risk_object_type": risk_object_type,
             "finding_score": finding_score,
             "risk_score": finding_score,
             "severity": urgency,
@@ -705,7 +820,8 @@ def build_notables(root: Path, scenario: str, dataset_dir: Path, cfg: dict) -> d
             "source_host": source_row.get("host", ""),
             "source": source_row.get("source", ""),
             "source_sourcetype": source_row.get("sourcetype", ""),
-            "notes": "Event-backed alert noise; participant must triage the linked raw event.",
+            "source_generated_presence": "yes",
+            "notes": "Benign Positive backed by one generated non-malicious background event.",
         })
 
     records.sort(key=lambda r: (r["time"], r["event"]))
@@ -725,25 +841,38 @@ def build_notables(root: Path, scenario: str, dataset_dir: Path, cfg: dict) -> d
         for row in records:
             f.write(json.dumps(row, separators=(",", ":")) + "\n")
 
+    disposition_counts = defaultdict(int)
+    for row in instructor_rows:
+        disposition_counts[row["expected_disposition"]] += 1
+
     manifest = {
         "scenario": scenario,
         "events": len(records),
         "campaign_notables": len(findings),
         "noise_notables": noise_count,
+        "true_positive_notables": disposition_counts["True Positive"],
+        "benign_positive_notables": disposition_counts["Benign Positive"],
         "sourcetype": "stash",
         "source": "per-event search_name",
-        "stash_schema": "es8-direct-notable-kv-v3",
-        "notable_model": "non-rba-direct-event",
+        "stash_schema": "es8-direct-notable-kv-v4",
+        "notable_model": "non-rba-direct-event-risk-object",
         "source_events_per_notable": 1,
+        "truth_contract": {
+            "True Positive": "one generated event whose authored truth_label is malicious",
+            "Benign Positive": "one generated authored benign event or generated non-malicious background event",
+        },
+        "entity_contract": "entity=risk_object and entity_type=risk_object_type",
         "canonical_ingest_file": "hec/events.jsonl",
         "participant_filter": f"index=notable host=SILK-SPECTER-ES sourcetype=stash scenario={scenario}",
         "required_finding_fields": [
-            "rule_name", "rule_description", "entity", "entity_type", "finding_score", "risk_score",
-            "severity", "urgency", "status_label", "security_domain", "source_event_id", "drilldown_search",
+            "rule_name", "rule_description", "entity", "entity_type",
+            "risk_object", "risk_object_type", "finding_score", "risk_score",
+            "severity", "urgency", "status_label", "security_domain",
+            "source_event_id", "contributing_events_search", "drilldown_search",
         ],
         "forbidden_rba_fields": [
-            "all_risk_objects", "normalized_risk_object", "risk_object", "risk_object_type",
-            "risk_event_count",
+            "all_risk_objects", "normalized_risk_object", "risk_event_count",
+            "risk_threshold", "risk_object_system",
         ],
     }
     (out / "manifest.json").write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
@@ -754,14 +883,23 @@ def build_notables(root: Path, scenario: str, dataset_dir: Path, cfg: dict) -> d
     with (out / "ingest_manifest.csv").open("w", newline="", encoding="utf-8") as f:
         w = csv.DictWriter(f, fieldnames=["file", "host", "source", "sourcetype", "event_count"])
         w.writeheader()
-        w.writerow({"file": "raw/notables.log", "host": "SILK-SPECTER-ES", "source": "per-event search_name", "sourcetype": "stash", "event_count": len(records)})
+        w.writerow({
+            "file": "raw/notables.log",
+            "host": "SILK-SPECTER-ES",
+            "source": "per-event search_name",
+            "sourcetype": "stash",
+            "event_count": len(records),
+        })
 
     instructor_path = root / "instructor" / "findings" / f"{scenario}_notable_ground_truth.csv"
     with instructor_path.open("w", newline="", encoding="utf-8") as f:
         fields = [
-            "event_id", "scenario", "time", "rule_name", "expected_disposition", "activity_id", "kind",
-            "entity", "entity_type", "finding_score", "risk_score", "severity", "security_domain", "source_count",
-            "source_event_id", "source_host", "source", "source_sourcetype", "notes",
+            "event_id", "scenario", "time", "rule_name", "expected_disposition",
+            "source_truth_label", "activity_id", "kind",
+            "entity", "entity_type", "risk_object", "risk_object_type",
+            "finding_score", "risk_score", "severity", "security_domain", "source_count",
+            "source_event_id", "source_host", "source", "source_sourcetype",
+            "source_generated_presence", "notes",
         ]
         w = csv.DictWriter(f, fieldnames=fields)
         w.writeheader()
